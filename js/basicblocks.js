@@ -724,6 +724,7 @@ function initBasicProtoBlocks(palettes, blocks) {
     blocks.protoBlockDict['start'] = startBlock;
     startBlock.staticLabels.push(_('start'));
     startBlock.extraWidth = 40;
+    startBlock.labelOffset = 15;
     startBlock.adjustWidthToLabel();
     startBlock.stackClampZeroArgBlock();
 
@@ -732,6 +733,7 @@ function initBasicProtoBlocks(palettes, blocks) {
     blocks.protoBlockDict['action'] = actionBlock;
     actionBlock.staticLabels.push(_('action'));
     actionBlock.extraWidth = 42;
+    actionBlock.labelOffset = 15;
     actionBlock.adjustWidthToLabel();
     actionBlock.stackClampOneArgBlock();
     actionBlock.defaults.push(_('action'));
@@ -1021,6 +1023,23 @@ function initBasicProtoBlocks(palettes, blocks) {
     blocks.protoBlockDict['hidden'] = hiddenBlock;
     hiddenBlock.hidden = true;
     hiddenBlock.hiddenBlockFlow();
+
+    var backwardBlock = new ProtoBlock('backward');
+    backwardBlock.palette = palettes.dict['flow'];
+    blocks.protoBlockDict['backward'] = backwardBlock;
+    //.TRANS: run code backward
+    backwardBlock.staticLabels.push(_('backward'));
+    backwardBlock.adjustWidthToLabel();
+    backwardBlock.flowClampZeroArgBlock();
+
+    var newblock = new ProtoBlock('duplicatenotes');
+    newblock.palette = palettes.dict['flow'];
+    blocks.protoBlockDict['duplicatenotes'] = newblock;
+    //.TRANS: run each block more than once
+    newblock.staticLabels.push(_('duplicate'));
+    newblock.adjustWidthToLabel();
+    newblock.flowClampOneArgBlock();
+    newblock.defaults.push(2);
 
     var defaultBlock = new ProtoBlock('defaultcase');
     defaultBlock.palette = palettes.dict['flow'];
@@ -2085,14 +2104,6 @@ function initBasicProtoBlocks(palettes, blocks) {
     setbpmBlock.defaults.push(90);
     setbpmBlock.hidden = true;
 
-    var backwardBlock = new ProtoBlock('backward');
-    backwardBlock.palette = palettes.dict['extras'];
-    blocks.protoBlockDict['backward'] = backwardBlock;
-    backwardBlock.staticLabels.push(_('backward'));
-    backwardBlock.adjustWidthToLabel();
-    backwardBlock.flowClampZeroArgBlock();
-    backwardBlock.hidden = true;
-
     var skipNotesBlock = new ProtoBlock('skipnotes');
     skipNotesBlock.palette = palettes.dict['extras'];
     blocks.protoBlockDict['skipnotes'] = skipNotesBlock;
@@ -2101,15 +2112,6 @@ function initBasicProtoBlocks(palettes, blocks) {
     skipNotesBlock.flowClampOneArgBlock();
     skipNotesBlock.defaults.push(2);
     skipNotesBlock.hidden = true;
-
-    var duplicateNotesBlock = new ProtoBlock('duplicatenotes');
-    duplicateNotesBlock.palette = palettes.dict['extras'];
-    blocks.protoBlockDict['duplicatenotes'] = duplicateNotesBlock;
-    duplicateNotesBlock.staticLabels.push(_('duplicate notes'));
-    duplicateNotesBlock.adjustWidthToLabel();
-    duplicateNotesBlock.flowClampOneArgBlock();
-    duplicateNotesBlock.defaults.push(2);
-    duplicateNotesBlock.hidden = true;
 
     var beatFactorBlock = new ProtoBlock('multiplybeatfactor');
     beatFactorBlock.palette = palettes.dict['extras'];
@@ -2402,6 +2404,7 @@ function initBasicProtoBlocks(palettes, blocks) {
 
     // Push protoblocks onto their palettes.
     for (var protoblock in blocks.protoBlockDict) {
+	console.log(protoblock);
         if (blocks.protoBlockDict[protoblock].palette != null) {
             blocks.protoBlockDict[protoblock].palette.add(blocks.protoBlockDict[protoblock]);
         }

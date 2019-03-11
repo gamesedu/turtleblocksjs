@@ -15,166 +15,197 @@
 // (https://github.com/walterbender/turtleart), but implemented from
 // scratch. -- Walter Bender, October 2014.
 
-const _THIS_IS_MUSIC_BLOCKS_ = false;
-const _THIS_IS_TURTLE_BLOCKS_ = !_THIS_IS_MUSIC_BLOCKS_;
+function Activity() {
 
-const _ERRORMSGTIMEOUT_ = 15000;
+    _THIS_IS_MUSIC_BLOCKS_ = false;
+    _THIS_IS_TURTLE_BLOCKS_ = !_THIS_IS_MUSIC_BLOCKS_;
+    _ERRORMSGTIMEOUT_ = 15000;
+    LEADING = 0;
+    cellSize = 55;
+    searchSuggestions = [];
+    homeButtonContainers = [];
 
-if (_THIS_IS_TURTLE_BLOCKS_) {
-    function facebookInit() {
-        window.fbAsyncInit = function () {
-            FB.init({
-                appId: '1496189893985945',
-                xfbml: true,
-                version: 'v2.1'
-            });
+    var that = this;
 
-            // ADD ADDITIONAL FACEBOOK CODE HERE
+    _findBlocks = this._findBlocks;
+    _doFastButton = this._doFastButton;
+    _doSlowButton = this._doSlowButton;
+    doHardStopButton = this.doHardStopButton;
+    _setupBlocksContainerEvents = this._setupBlocksContainerEvents
+    getCurrentKeyCode = this.getCurrentKeyCode;
+    clearCurrentKeyCode = this.clearCurrentKeyCode;
+    onStopTurtle = this.onStopTurtle;
+    onRunTurtle = this.onRunTurtle;
+    doSave = this.doSave;
+    runProject = this.runProject;
+    loadProject = this.loadProject;
+    loadStartWrapper = this.loadStartWrapper;
+    showContents = this.showContents;
+    _loadStart = this._loadStart;
+    _setupAndroidToolbar = this._setupAndroidToolbar;;
+    _loadButtonDragHandler = this._loadButtonDragHandler;
+
+    if (_THIS_IS_TURTLE_BLOCKS_) {
+        function facebookInit() {
+            window.fbAsyncInit = function () {
+                FB.init({
+                    appId: '1496189893985945',
+                    xfbml: true,
+                    version: 'v2.1'
+                });
+
+                // ADD ADDITIONAL FACEBOOK CODE HERE
+            };
         };
-    };
 
+        try {
+            (function (d, s, id) {
+                js,
+                fjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) {
+                    return;
+                }
 
-    try {
-        (function (d, s, id) {
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) {
-                return;
+                js = d.createElement(s);
+                js.id = id;
+                js.src = 'https://connect.facebook.net/en_US/sdk.js';
+                fjs.parentNode.insertBefore(js, fjs);
+            }(document, 'script', 'facebook-jssdk'));
+        } catch (e) {};
+    }
+
+    firstTimeUser = false;
+    if (_THIS_IS_MUSIC_BLOCKS_) {
+        beginnerMode = true;
+        try {
+            if (localStorage.beginnerMode === undefined) {
+                firstTimeUser = true;
+                console.log('FIRST TIME USER');
+            } else if (localStorage.beginnerMode !== null) {
+                beginnerMode = localStorage.beginnerMode;
+                console.log('READING BEGINNERMODE FROM LOCAL STORAGE: ' + beginnerMode + ' ' + typeof (beginnerMode));
+                if (typeof (beginnerMode) === 'string') {
+                    if (beginnerMode === 'false') {
+                        beginnerMode = false;
+                    }
+                }
             }
 
-            js = d.createElement(s);
-            js.id = id;
-            js.src = 'https://connect.facebook.net/en_US/sdk.js';
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
-    } catch (e) {
-    };
-}
-
-try {
-    console.log(localStorage.beginnerMode);
-
-    if (localStorage.beginnerMode !== null) {
-        console.log('setting mode from local storage');
-        beginnerMode = (localStorage.beginnerMode == 'true');
-    } else {
-        beginnerMode = true;
-    }
-} catch (e) {
-    console.log(e);
-    beginnerMode = true;
-}
-
-try {
-    console.log(localStorage.languagePreference);
-
-    if (localStorage.languagePreference) {
-        console.log('setting language from local storage');
-        try {
-            lang = localStorage.languagePreference;
-            document.webL10n.setLanguage(lang);
+            console.log('BEGINNERMODE is ' + beginnerMode);
         } catch (e) {
             console.log(e);
+            console.log('ERROR READING BEGINNER MODE');
+            console.log('BEGINNERMODE is ' + beginnerMode);
         }
     } else {
-        var lang = document.webL10n.getLanguage();
-        if (lang.indexOf('-') !== -1) {
-            lang = lang.slice(0, lang.indexOf('-'));
-            document.webL10n.setLanguage(lang);
-        }
+        // Turtle Blocks
+        beginnerMode = false;
     }
-} catch (e) {
-    console.log(e);
-}
 
-var MYDEFINES = [
-    'activity/sugarizer-compatibility',
-    'utils/platformstyle',
-    'easeljs.min',
-    'tweenjs.min',
-    'preloadjs.min',
-    'howler',
-    'p5.min',
-    'p5.sound.min',
-    'p5.dom.min',
-    'mespeak',
-    'Chart',
-    'utils/utils',
-    'activity/artwork',
-    'widgets/status',
-    'utils/munsell',
-    'activity/trash',
-    'activity/boundary',
-    'activity/turtle',
-    'activity/palette',
-    'activity/protoblocks',
-    'activity/blocks',
-    'activity/block',
-    'activity/turtledefs',
-    'activity/logo',
-    'activity/clearbox',
-    'activity/savebox',
-    'activity/languagebox',
-    'activity/utilitybox',
-    'activity/basicblocks',
-    'activity/blockfactory',
-    'activity/analytics',
-    'activity/macros',
-    'activity/SaveInterface',
-    'utils/musicutils',
-    'utils/synthutils',
-    'activity/playbackbox',
-    'activity/pastebox',
-    'prefixfree.min'
-];
+    if (beginnerMode) {
+        console.log('BEGINNER MODE');
+    } else {
+        console.log('ADVANCED MODE');
+    }
 
-if (_THIS_IS_MUSIC_BLOCKS_) {
-    var MUSICBLOCKS_EXTRAS = [
-        'Tone.min',
-        'widgets/modewidget',
-        'widgets/pitchtimematrix',
-        'widgets/pitchdrummatrix',
-        'widgets/rhythmruler',
-        'widgets/pitchstaircase',
-        'widgets/tempo',
-        'widgets/pitchslider',
-        'widgets/timbre',
-        'activity/lilypond',
-        'activity/abc'
-    ];
-    MYDEFINES = MYDEFINES.concat(MUSICBLOCKS_EXTRAS);
-}
-
-define(MYDEFINES, function (compatibility) {
-
-    // Manipulate the DOM only when it is ready.
-    require(['domReady!','activity/sugarizer-compatibility'], function (doc) {
-        if (sugarizerCompatibility.isInsideSugarizer()) {
-            window.addEventListener('localized', function () {
-                sugarizerCompatibility.loadData(function () {
-                    var planet=document.getElementById('planet-iframe');
-                    planet.onload = function() {
-                        console.log('load');
-                        domReady(doc);
-                    };
-                });
-            });
-
-            document.webL10n.setLanguage(sugarizerCompatibility.getLanguage());
+    try {
+        console.log('stored preference: ' + localStorage.languagePreference);
+        console.log('browser preference: ' + navigator.language);
+    
+        if (localStorage.languagePreference !== undefined) {
+            try {
+                lang = localStorage.languagePreference;
+                document.webL10n.setLanguage(lang);
+            } catch (e) {
+                console.log(e);
+            }
         } else {
-            console.log('loaded');
-            domReady(doc);
+            // document.webL10n.getLanguage();
+            lang = navigator.language;
+            if (lang.indexOf('-') !== -1) {
+                lang = lang.slice(0, lang.indexOf('-'));
+                document.webL10n.setLanguage(lang);
+            }
         }
-    });
+    } catch (e) {
+        console.log(e);
+    }
 
-    function domReady(doc) {
+    MYDEFINES = [
+        'activity/sugarizer-compatibility',
+        'utils/platformstyle',
+        'easeljs.min',
+        'tweenjs.min',
+        'preloadjs.min',
+        'howler',
+        'p5.min',
+        'p5.sound.min',
+        'p5.dom.min',
+        // 'mespeak',
+        'Chart',
+        'utils/utils',
+        'activity/artwork',
+        'widgets/status',
+        'widgets/help',
+        'utils/munsell',
+        'activity/toolbar',
+        'activity/trash',
+        'activity/boundary',
+        'activity/turtle',
+        'activity/palette',
+        'activity/protoblocks',
+        'activity/blocks',
+        'activity/block',
+        'activity/turtledefs',
+        'activity/logo',
+        'activity/languagebox',
+        'activity/basicblocks',
+        'activity/blockfactory',
+        'activity/rubrics',
+        'activity/macros',
+        'activity/SaveInterface',
+        'utils/musicutils',
+        'utils/synthutils',
+        // 'activity/playbackbox',
+        'activity/pastebox',
+        'prefixfree.min'
+    ];
+
+    if (_THIS_IS_MUSIC_BLOCKS_) {
+        MUSICBLOCKS_EXTRAS = [
+            'Tone',
+            'widgets/modewidget',
+            'widgets/pitchtimematrix',
+            'widgets/pitchdrummatrix',
+            'widgets/rhythmruler',
+            'widgets/pitchstaircase',
+            'widgets/temperament',
+            'widgets/tempo',
+            'widgets/pitchslider',
+            'widgets/musickeyboard',
+            'widgets/timbre',
+            'activity/lilypond',
+            'activity/abc'
+        ];
+        MYDEFINES = MYDEFINES.concat(MUSICBLOCKS_EXTRAS);
+    }
+
+
+    /*
+     * Initialises major variables and renders default stack
+     *
+     */
+    this.setupDependencies = function () {
+        // blocks = new Blocks(this);
         createDefaultStack();
         createHelpContent();
         // facebookInit();
         window.scroll(0, 0);
 
+        /*
         try {
             meSpeak.loadConfig('lib/mespeak_config.json');
-            var lang = document.webL10n.getLanguage();
+             lang = document.webL10n.getLanguage();
             if (sugarizerCompatibility.isInsideSugarizer()) {
                 lang = sugarizerCompatibility.getLanguage();
             }
@@ -187,163 +218,103 @@ define(MYDEFINES, function (compatibility) {
         } catch (e) {
             console.log(e);
         }
+        */
 
         document.title = TITLESTRING;
 
-        var canvas = docById('myCanvas');
+        canvas = docById('myCanvas');
 
         // Set up a file chooser for the doOpen function.
-        var fileChooser = docById('myOpenFile');
+        fileChooser = docById('myOpenFile');
         // Set up a file chooser for the doOpenPlugin function.
-        var pluginChooser = docById('myOpenPlugin');
+        pluginChooser = docById('myOpenPlugin');
         // The file chooser for all files.
-        var allFilesChooser = docById('myOpenAll');
+        allFilesChooser = docById('myOpenAll');
+        auxToolbar = docById('aux-toolbar');
 
         // Are we running off of a server?
-        var server = true;
-        var turtleBlocksScale = 1;
-        var stage;
-        var turtles;
-        var palettes;
-        var blocks;
-        var logo;
-        var clearBox;
-        var pasteBox;
-        var utilityBox;
-        var languageBox = null;
-        var playbackBox = null;
-        var planet;
-        window.converter;
-        var storage;
-        var buttonsVisible = true;
-        var headerContainer = null;
-        var menuButtonsVisible = true;
-        var menuContainer = null;
-        var scrollBlockContainer = false;
-        var currentKeyCode = 0;
-        var pasteContainer = null;
-        var pasteImage = null;
-        // For updatePasteButton function
-        var bitmapActivePaste, bitmapDisablePaste;
-        var gridContainer = null;
-        var gridButtonLabel = null;
-        var gridImages = [];
-        var chartBitmap = null;
-        var saveBox;
-        var merging = false;
-        var loading = false;
+        server = true;
+        turtleBlocksScale = 1;
+        mousestage = null;
+        stage = null;
+        turtles = null;
+        palettes = null;
+        blocks = null;
+        logo = null;
+        pasteBox = null;
+        languageBox = null;
+        planet = null;
+        window.converter = null;
+        storage = null;
+        buttonsVisible = true;
+        headerContainer = null;
+        swiping = false;
+        menuButtonsVisible = false;
+        scrollBlockContainer = false;
+        scrollPaletteContainer = false;
+        currentKeyCode = 0;
+        pasteContainer = null;
+        pasteImage = null;
+        chartBitmap = null;
+        merging = false;
+        loading = false;
+        // On-screen buttons
+        smallerContainer = null;
+        largerContainer = null;
+        smallerOffContainer = null;
+        largerOffContainer = null;
+        resizeDebounce = false;
+        hideBlocksContainer = null;
+        collapseBlocksContainer = null;
 
-        var searchWidget = docById('search');
+        searchWidget = docById('search');
         searchWidget.style.visibility = 'hidden';
 
-        var progressBar = docById('myProgress');
+        progressBar = docById('myProgress');
         progressBar.style.visibility = 'hidden';
 
         new createjs.DOMElement(docById('paste'));
-        var paste = docById('paste');
+        paste = docById('paste');
         paste.style.visibility = 'hidden';
 
         closeContextWheel = function () {
             // docById('contextWheelDiv').style.display = 'none';
         };
 
-        piemenuContext = function (activeBlock) {
-            if (activeBlock === null) {
-                return;
-            }
+        toolbarHeight = document.getElementById('toolbars').offsetHeight;
+    }
 
-            // piemenu version of ruler
-            docById('contextWheelDiv').style.display = '';
-            docById('contextWheelDiv').style.position = 'absolute';
-            docById('contextWheelDiv').style.left = ((blocks.getStageScale() * blocks.blockList[activeBlock].container.x) - 150) + 'px';
-            docById('contextWheelDiv').style.top = ((blocks.getStageScale() * blocks.blockList[activeBlock].container.y) - 150) + 'px';
-            labels = ['imgsrc:header-icons/copy-button.svg',
-                    'imgsrc:header-icons/paste-disabled-button.svg',
-                    'imgsrc:header-icons/empty-trash-button.svg',
-                    'imgsrc:header-icons/cancel-button.svg'];
-
-            if (blocks.blockList[activeBlock].name === 'action') {
-                labels.push('imgsrc:header-icons/save-blocks-button.svg');
-            }
-
-            var wheel = new wheelnav('contextWheelDiv', null, 150, 150);
-            wheel.colors = ['#808080', '#909090', '#808080', '#909090', '#707070'];
-            wheel.slicePathFunction = slicePath().DonutSlice;
-            wheel.slicePathCustom = slicePath().DonutSliceCustomization();
-            wheel.slicePathCustom.minRadiusPercent = 0.4;
-            wheel.slicePathCustom.maxRadiusPercent = 1.0;
-            wheel.sliceSelectedPathCustom = wheel.slicePathCustom;
-            wheel.sliceInitPathCustom = wheel.slicePathCustom;
-            wheel.clickModeRotate = false;
-            wheel.initWheel(labels);
-            wheel.createWheel();
-
-            wheel.navItems[0].setTooltip(_('Copy'));
-            wheel.navItems[1].setTooltip(_('Paste'));
-            wheel.navItems[2].setTooltip(_('Move to trash'));
-            wheel.navItems[3].setTooltip(_('Close'));
-            if (blocks.blockList[activeBlock].name === 'action') {
-                wheel.navItems[4].setTooltip(_('Save stack'));
-            }
-
-            wheel.navItems[0].selected = false;
-
-            wheel.navItems[0].navigateFunction = function () {
-                blocks.activeBlock = activeBlock;
-                blocks.prepareStackForCopy();
-                wheel.navItems[1].setTitle('imgsrc:header-icons/paste-button.svg');
-                wheel.navItems[1].refreshNavItem(true);
-                wheel.refreshWheel();
-            };
-
-            wheel.navItems[1].navigateFunction = function () {
-                blocks.pasteStack();
-            };
-
-            wheel.navItems[2].navigateFunction = function () {
-                blocks.sendStackToTrash(blocks.blockList[activeBlock]);
-                docById('contextWheelDiv').style.display = 'none';
-            };
-
-            wheel.navItems[3].navigateFunction = function () {
-                docById('contextWheelDiv').style.display = 'none';
-            };
-
-            if (blocks.blockList[activeBlock].name === 'action') {
-                wheel.navItems[4].navigateFunction = function () {
-                    blocks.activeBlock = activeBlock;
-                    blocks.saveStack();
-                };
-            }
-
-            setTimeout(function () {
-                blocks.rightClick = false;
-            }, 500);
-        };
-
-        // Do something on right click
-        document.addEventListener("contextmenu", function(e) {
-            if (blocks.activeBlocks === null) {
-                blocks.rightClick = false;
-                return;
-            }
-
-            blocks.rightClick = true;
-            var activeBlock = blocks.activeBlock;
-
-            e.preventDefault();
-            e.stopPropagation();
-
-            piemenuContext(activeBlock);
+    /*
+     * Sets up right click functionality opening the context menus
+     * (if block is right clicked)
+     */
+    this.doContextMenus = function () {
+        document.addEventListener("contextmenu", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
         }, false);
+    };
 
+    /*
+     * Sets up plugin and palette boiler plate
+     */
+    this.doPluginsAndPaletteCols = function () {
         // Calculate the palette colors.
-        for (var p in PALETTECOLORS) {
+        /*
+        for ( p in PALETTECOLORS) {
             PALETTEFILLCOLORS[p] = getMunsellColor(PALETTECOLORS[p][0], PALETTECOLORS[p][1], PALETTECOLORS[p][2]);
             PALETTESTROKECOLORS[p] = getMunsellColor(PALETTECOLORS[p][0], PALETTECOLORS[p][1] - 30, PALETTECOLORS[p][2]);
             PALETTEHIGHLIGHTCOLORS[p] = getMunsellColor(PALETTECOLORS[p][0], PALETTECOLORS[p][1] + 10, PALETTECOLORS[p][2]);
             HIGHLIGHTSTROKECOLORS[p] = getMunsellColor(PALETTECOLORS[p][0], PALETTECOLORS[p][1] - 50, PALETTECOLORS[p][2]);
         }
+        */
+
+        for (p in platformColor.paletteColors) {
+            PALETTEFILLCOLORS[p] = platformColor.paletteColors[p][0];
+            PALETTESTROKECOLORS[p] = platformColor.paletteColors[p][1];
+            PALETTEHIGHLIGHTCOLORS[p] = platformColor.paletteColors[p][2];
+            HIGHLIGHTSTROKECOLORS[p] = platformColor.paletteColors[p][1];
+        };
 
         pluginObjs = {
             'PALETTEPLUGINS': {},
@@ -360,304 +331,365 @@ define(MYDEFINES, function (compatibility) {
         };
 
         // Stacks of blocks saved in local storage
-        var macroDict = {};
+        macroDict = {};
 
-        var stopTurtleContainer = null;
-        var hardStopTurtleContainer = null;
-        var homeButtonContainers = [];
-
-        var cameraID = null;
+        cameraID = null;
 
         // default values
         const DEFAULTDELAY = 500; // milleseconds
         const TURTLESTEP = -1; // Run in step-by-step mode
 
-        const BLOCKSCALES = [1, 1.5, 2, 3, 4];
-        var blockscale = BLOCKSCALES.indexOf(DEFAULTBLOCKSCALE);
+        BLOCKSCALES = [1, 1.5, 2, 3, 4];
+        blockscale = BLOCKSCALES.indexOf(DEFAULTBLOCKSCALE);
         if (blockscale === -1) {
             blockscale = 1;
         }
 
         // Used to track mouse state for mouse button block
-        var stageMouseDown = false;
-        var stageX = 0;
-        var stageY = 0;
+        stageMouseDown = false;
+        stageX = 0;
+        stageY = 0;
 
-        var onXO = (screen.width === 1200 && screen.height === 900) || (screen.width === 900 && screen.height === 1200);
+        onXO = (screen.width === 1200 && screen.height === 900) || (screen.width === 900 && screen.height === 1200);
 
-        var cellSize = 55;
+        cellSize = 55;
         if (onXO) {
             cellSize = 75;
         }
 
-        var onscreenButtons = [];
-        var onscreenMenu = [];
-        var utilityButton = null;
-        var playbackButton = null;
-        var saveButton = null;
-        var deleteAllButton = null;
+        onscreenButtons = [];
+        onscreenMenu = [];
 
-        var helpContainer = null;
-        var helpIdx = 0;
-        var firstRun = true;
+        firstRun = true;
 
         pluginsImages = {};
 
-        window.onblur = function () {
-            doHardStopButton(true);
-        };
+    }
 
-        function _findBlocks() {
-            hideDOMLabel();
-            logo.showBlocks();
-            blocksContainer.x = 0;
-            blocksContainer.y = 0;
-            palettes.initial_x = 55;
-            palettes.initial_y = 55;
-            palettes.updatePalettes();
-            var x = 100 * turtleBlocksScale;
-            var y = 50 * turtleBlocksScale;
-            var even = true;
+    window.onblur = function () {
+        that.doHardStopButton(true);
+    };
 
-            // First start blocks
-            for (var blk in blocks.blockList) {
-                if (!blocks.blockList[blk].trash) {
-                    var myBlock = blocks.blockList[blk];
-                    if (myBlock.name !== 'start') {
-                        continue;
-                    };
+    /*
+     * Recenters blocks by finding their position on the screen
+     * and moving them accordingly
+     */
+    this._findBlocks = function () {
+        // _showHideAuxMenu(false);
+        if (!blocks.visible)  {
+            _changeBlockVisibility();
+        }
+        var leftpos = Math.floor(canvas.width / 4);
+        var toppos;
+        blocks.activeBlock = null;
+        hideDOMLabel();
+        logo.showBlocks();
+        blocksContainer.x = 0;
+        blocksContainer.y = 0;
 
-                    if (myBlock.connections[0] == null) {
-                        var dx = x - myBlock.container.x;
-                        var dy = y - myBlock.container.y;
-                        blocks.moveBlockRelative(blk, dx, dy);
-                        blocks.findDragGroup(blk);
-                        if (blocks.dragGroup.length > 0) {
-                            for (var b = 0; b < blocks.dragGroup.length; b++) {
-                                var bblk = blocks.dragGroup[b];
-                                if (b !== 0) {
-                                    blocks.moveBlockRelative(bblk, dx, dy);
-                                }
+
+        if (auxToolbar.style.display === 'block') {
+            toppos = 90 + toolbarHeight;
+        } else {
+            toppos = 90;
+        }
+
+
+
+        palettes.updatePalettes();
+        var x = Math.floor(leftpos * turtleBlocksScale);
+        var y = Math.floor(toppos * turtleBlocksScale);
+        var even = true;
+
+        // First start blocks
+        for (var blk in blocks.blockList) {
+            if (!blocks.blockList[blk].trash) {
+                var myBlock = blocks.blockList[blk];
+                if (myBlock.name !== 'start') {
+                    continue;
+                };
+
+                if (myBlock.connections[0] == null) {
+                    var dx = x - myBlock.container.x;
+                    var dy = y - myBlock.container.y;
+                    blocks.moveBlockRelative(blk, dx, dy);
+                    blocks.findDragGroup(blk);
+                    if (blocks.dragGroup.length > 0) {
+                        for (var b = 0; b < blocks.dragGroup.length; b++) {
+                            var bblk = blocks.dragGroup[b];
+                            if (b !== 0) {
+                                blocks.moveBlockRelative(bblk, dx, dy);
                             }
                         }
-                        x += 150 * turtleBlocksScale;
-                        if (x > (canvas.width - 200) / (turtleBlocksScale)) {
-                            even = !even;
-                            if (even) {
-                                x = 100 * turtleBlocksScale;
-                            } else {
-                                x = 150 * turtleBlocksScale;
-                            }
+                    }
 
-                            y += 50 * turtleBlocksScale;
+                    x += Math.floor(150 * turtleBlocksScale);
+                    if (x > (canvas.width * 7 / 8) / (turtleBlocksScale)) {
+                        even = !even;
+                        if (even) {
+                            x = Math.floor(leftpos);
+                        } else {
+                            x = Math.floor(leftpos + STANDARDBLOCKHEIGHT);
                         }
+
+                        y += STANDARDBLOCKHEIGHT;
                     }
                 }
             }
+        }
 
-            // The everything else
-            for (var blk in blocks.blockList) {
-                if (!blocks.blockList[blk].trash) {
-                    var myBlock = blocks.blockList[blk];
-                    if (myBlock.name === 'start') {
-                        continue;
-                    };
+        // The everything else
+        for (var blk in blocks.blockList) {
+            if (!blocks.blockList[blk].trash) {
+                var myBlock = blocks.blockList[blk];
+                if (myBlock.name === 'start') {
+                    continue;
+                };
 
-                    if (myBlock.connections[0] == null) {
-                        var dx = x - myBlock.container.x;
-                        var dy = y - myBlock.container.y;
-                        blocks.moveBlockRelative(blk, dx, dy);
-                        blocks.findDragGroup(blk);
-                        if (blocks.dragGroup.length > 0) {
-                            for (var b = 0; b < blocks.dragGroup.length; b++) {
-                                var bblk = blocks.dragGroup[b];
-                                if (b !== 0) {
-                                    blocks.moveBlockRelative(bblk, dx, dy);
-                                }
+                if (myBlock.connections[0] == null) {
+                    var dx = x - myBlock.container.x;
+                    var dy = y - myBlock.container.y;
+                    blocks.moveBlockRelative(blk, dx, dy);
+                    blocks.findDragGroup(blk);
+                    if (blocks.dragGroup.length > 0) {
+                        for (var b = 0; b < blocks.dragGroup.length; b++) {
+                            var bblk = blocks.dragGroup[b];
+                            if (b !== 0) {
+                                blocks.moveBlockRelative(bblk, dx, dy);
                             }
                         }
-                        x += 150 * turtleBlocksScale;
-                        if (x > (canvas.width - 200) / (turtleBlocksScale)) {
-                            even = !even;
-                            if (even) {
-                                x = 100 * turtleBlocksScale;
-                            } else {
-                                x = 150 * turtleBlocksScale;
-                            }
-
-                            y += 50 * turtleBlocksScale;
+                    }
+                    x += 150 * turtleBlocksScale;
+                    if (x > (canvas.width * 7 / 8) / (turtleBlocksScale)) {
+                        even = !even;
+                        if (even) {
+                            x = Math.floor(leftpos);
+                        } else {
+                            x = Math.floor(leftpos + STANDARDBLOCKHEIGHT);
                         }
+
+                        y += STANDARDBLOCKHEIGHT;
                     }
                 }
             }
+        }
 
-            // Blocks are all home, so reset go-home-button.
-            homeButtonContainers[0].visible = false;
-            homeButtonContainers[1].visible = true;
-            boundary.hide();
-        };
+        // Blocks are all home, so reset go-home-button.
+        setHomeContainers(false, true);
+        boundary.hide();
+    };
 
-        function _printBlockSVG() {
-            var svg = '';
-            var xMax = 0;
-            var yMax = 0;
-            for (var i = 0; i < blocks.blockList.length; i++) {
-                if (blocks.blockList[i].name === 'hidden') {
-                    continue;
-                }
+    /*
+     * @param zero {hides container}
+     * @param one {shows container}
+     */
+    setHomeContainers = function (zero, one) {
+        if (homeButtonContainers[0] === null) {
+            return;
+        }
 
-                if (blocks.blockList[i].name === 'hiddennoflow') {
-                    continue;
-                }
+        homeButtonContainers[0].visible = zero;
+        homeButtonContainers[1].visible = one;
+    };
 
-                if (blocks.blockList[i].trash) {
-                    continue;
-                }
+    /*
+     * @return {SVG} returns SVG of blocks
+     */
+    _printBlockSVG = function () {
+        blocks.activeBlock = null;
+        var startCounter = 0;
+        var svg = '';
+        var xMax = 0;
+        var yMax = 0;
+        for (var i = 0; i < blocks.blockList.length; i++) {
+            if (blocks.blockList[i].ignore()) {
+                continue;
+            }
 
-                if (blocks.blockList[i].container.x + blocks.blockList[i].width > xMax) {
-                    xMax = blocks.blockList[i].container.x + blocks.blockList[i].width;
-                }
+            if (blocks.blockList[i].container.x + blocks.blockList[i].width > xMax) {
+                xMax = blocks.blockList[i].container.x + blocks.blockList[i].width;
+            }
 
-                if (blocks.blockList[i].container.y + blocks.blockList[i].height > yMax) {
-                    yMax = blocks.blockList[i].container.y + blocks.blockList[i].height;
-                }
+            if (blocks.blockList[i].container.y + blocks.blockList[i].height > yMax) {
+                yMax = blocks.blockList[i].container.y + blocks.blockList[i].height;
+            }
 
+            if (blocks.blockList[i].collapsed) {
+                var parts = blocks.blockCollapseArt[i].split('><');
+            } else {
                 var parts = blocks.blockArt[i].split('><');
-                svg += '<g transform="translate(' + blocks.blockList[i].container.x + ', ' + blocks.blockList[i].container.y + ')">';
-                if (SPECIALINPUTS.indexOf(blocks.blockList[i].name) !== -1) { 
-                    for (var p = 1; p < parts.length; p++) {
-                        // FIXME: This is fragile.
-                        if (p === 1) {
-                            svg += '<' +  parts[p] + '><';
-                        } else if (p === 2) {
-                            // skip filter
-                        } else if (p === 3) {
-                            svg += parts[p].replace('filter:url(#dropshadow);', '') + '><';
-                        } else if (p === 5) {
-                            // Add block value to SVG between tspans
-                            svg += parts[p] + '>' + blocks.blockList[i].value + '<';
-                        } else if (p === parts.length - 2) {
-                            svg += parts[p] + '>';
-                        } else if (p === parts.length - 1) {
-                            // skip final </svg>
-                        } else {
-                            svg += parts[p] + '><';
-                        }
-                    }
-                } else {
-                    for (var p = 1; p < parts.length; p++) {
-                        // FIXME: This is fragile.
-                        if (p === 1) {
-                            svg += '<' +  parts[p] + '><';
-                        } else if (p === 2) {
-                            // skip filter
-                        } else if (p === 3) {
-                            svg += parts[p].replace('filter:url(#dropshadow);', '') + '><';
-                        } else if (p === parts.length - 2) {
-                            svg += parts[p] + '>';
-                        } else if (p === parts.length - 1) {
-                            // skip final </svg>
-                        } else {
-                            svg += parts[p] + '><';
-                        }
+            }
+
+            if (blocks.blockList[i].isCollapsible()) {
+                svg += '<g>';
+            }
+
+            svg += '<g transform="translate(' + blocks.blockList[i].container.x + ', ' + blocks.blockList[i].container.y + ')">';
+            if (SPECIALINPUTS.indexOf(blocks.blockList[i].name) !== -1) {
+                for (var p = 1; p < parts.length; p++) {
+                    // FIXME: This is fragile.
+                    if (p === 1) {
+                        svg += '<' + parts[p] + '><';
+                    } else if (p === 2) {
+                        // skip filter
+                    } else if (p === 3) {
+                        svg += parts[p].replace('filter:url(#dropshadow);', '') + '><';
+                    } else if (p === 5) {
+                        // Add block value to SVG between tspans
+                        svg += parts[p] + '>' + blocks.blockList[i].value + '<';
+                    } else if (p === parts.length - 2) {
+                        svg += parts[p] + '>';
+                    } else if (p === parts.length - 1) {
+                        // skip final </svg>
+                    } else {
+                        svg += parts[p] + '><';
                     }
                 }
+            } else {
+                for (var p = 1; p < parts.length; p++) {
+                    // FIXME: This is fragile.
+                    if (p === 1) {
+                        svg += '<' + parts[p] + '><';
+                    } else if (p === 2) {
+                        // skip filter
+                    } else if (p === 3) {
+                        svg += parts[p].replace('filter:url(#dropshadow);', '') + '><';
+                    } else if (p === parts.length - 2) {
+                        svg += parts[p] + '>';
+                    } else if (p === parts.length - 1) {
+                        // skip final </svg>
+                    } else {
+                        svg += parts[p] + '><';
+                    }
+                }
+            }
+
+            svg += '</g>';
+
+            if (blocks.blockList[i].isCollapsible()) {
+                if (INLINECOLLAPSIBLES.indexOf(blocks.blockList[i].name) !== -1) {
+                    var y = blocks.blockList[i].container.y + 4;
+                } else {
+                    var y = blocks.blockList[i].container.y + 12;
+                }
+
+                svg += '<g transform="translate(' + blocks.blockList[i].container.x + ', ' + y + ') scale(0.5 0.5)">';
+                if (blocks.blockList[i].collapsed) {
+                    var parts = EXPANDBUTTON.split('><');
+                } else {
+                    var parts = COLLAPSEBUTTON.split('><');
+                }
+
+                for (var p = 2; p < parts.length - 1; p++) {
+                    svg += '<' + parts[p] + '>';
+                }
+
                 svg += '</g>';
             }
 
-            svg += '</svg>';
+            if (blocks.blockList[i].name === 'start') {
+                var x = blocks.blockList[i].container.x + 110;
+                var y = blocks.blockList[i].container.y + 12;
+                svg += '<g transform="translate(' + x + ', ' + y + ') scale(0.4 0.4)">';
 
-            save.download('svg', 'data:image/svg+xml;utf8,' + '<svg xmlns="http://www.w3.org/2000/svg" width="' + xMax + '" height="' + yMax + '">' + encodeURIComponent(svg), 'blockArtwork.svg', '"width=' + logo.canvas.width + ', height=' + logo.canvas.height + '"', 'blockArtwork.svg');
+                var parts = TURTLESVG.replace(/fill_color/g, FILLCOLORS[startCounter]).replace(/stroke_color/g, STROKECOLORS[startCounter]).split('><');
+
+                startCounter += 1;
+                if (startCounter > 9) {
+                    startCounter = 0;
+                }
+
+                for (var p = 2; p < parts.length - 1; p++) {
+                    svg += '<' + parts[p] + '>';
+                }
+
+                svg += '</g>';
+            }
+
+            if (blocks.blockList[i].isCollapsible()) {
+                svg += '</g>';
+            }
+        }
+
+        svg += '</svg>';
+
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="' + xMax + '" height="' + yMax + '">' + encodeURIComponent(svg);
+    };
+
+    /*
+     * Clears "canvas"
+     */
+    _allClear = function () {
+        blocks.activeBlock = null;
+        hideDOMLabel();
+
+        if (chartBitmap != null) {
+            stage.removeChild(chartBitmap);
+            chartBitmap = null;
+        }
+
+        logo.boxes = {};
+        logo.time = 0;
+        hideMsgs();
+        logo.setBackgroundColor(-1);
+        logo.notationOutput = '';
+        for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
+            logo.turtleHeaps[turtle] = [];
+            logo.notationStaging[turtle] = [];
+            logo.notationDrumStaging[turtle] = [];
+            turtles.turtleList[turtle].doClear(true, true, true);
+        }
+
+        blocksContainer.x = 0;
+        blocksContainer.y = 0;
+
+        // Code specific to cleaning up music blocks
+        Element.prototype.remove = function () {
+            this.parentElement.removeChild(this);
         };
 
-        function _allClear() {
-            hideDOMLabel();
-
-            if (chartBitmap != null) {
-                stage.removeChild(chartBitmap);
-                chartBitmap = null;
-            }
-
-            logo.boxes = {};
-            logo.time = 0;
-            hideMsgs();
-            logo.setBackgroundColor(-1);
-            logo.notationOutput = '';
-            for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
-                logo.turtleHeaps[turtle] = [];
-                logo.notationStaging[turtle] = [];
-                logo.notationDrumStaging[turtle] = [];
-                turtles.turtleList[turtle].doClear(true, true, true);
-            }
-
-            blocksContainer.x = 0;
-            blocksContainer.y = 0;
-
-            // Code specific to cleaning up music blocks
-            Element.prototype.remove = function () {
-                this.parentElement.removeChild(this);
-            };
-
-            NodeList.prototype.remove = HTMLCollection.prototype.remove = function () {
-                for (var i = 0, len = this.length; i < len; i++) {
-                    if(this[i] && this[i].parentElement) {
-                        this[i].parentElement.removeChild(this[i]);
-                    }
+        NodeList.prototype.remove = HTMLCollection.prototype.remove = function () {
+            for (var i = 0, len = this.length; i < len; i++) {
+                if (this[i] && this[i].parentElement) {
+                    this[i].parentElement.removeChild(this[i]);
                 }
-            };
-
-            var table = docById('myTable');
-            if(table != null) {
-                table.remove();
             }
         };
 
-        function _doFastButton(env) {
-            hideDOMLabel();
+        var table = docById('myTable');
+        if (table != null) {
+            table.remove();
+        }
+    };
 
-            stage.on('stagemousemove', function (event) {
-                stageX = event.stageX;
-                stageY = event.stageY;
-            });
+    /*
+     * @param env {specifies environment}
+     * Sets up play button functionality
+     * Runs music blocks
+     */
+    this._doFastButton = function (env) {
+        blocks.activeBlock = null;
+        hideDOMLabel();
 
-            var currentDelay = logo.turtleDelay;
-            var playingWidget = false;
-            logo.setTurtleDelay(0);
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                logo.synth.resume();
+        var currentDelay = logo.turtleDelay;
+        var playingWidget = false;
+        logo.setTurtleDelay(0);
+        if (_THIS_IS_MUSIC_BLOCKS_) {
+            logo.synth.resume();
 
-                if (docById('ptmDiv').style.visibility === 'visible') {
-                    playingWidget = true;
-                    logo.pitchTimeMatrix.playAll();
-                }
+            if (docById('ptmDiv').style.visibility === 'visible') {
+                playingWidget = true;
+                logo.pitchTimeMatrix.playAll();
+            }
 
-                if (docById('pscDiv').style.visibility === 'visible') {
-                    playingWidget = true;
-                    logo.pitchStaircase.playUpAndDown();
-                }
+            if (docById('pscDiv').style.visibility === 'visible') {
+                playingWidget = true;
+                logo.pitchStaircase.playUpAndDown();
+            }
 
-                if (docById('rulerDiv').style.visibility === 'visible') {
-                    // If the tempo widget is open, sync it up with the
-                    // rhythm ruler.
-                    if (docById('tempoDiv').style.visibility === 'visible') {
-                        if (logo.tempo.isMoving) {
-                            logo.tempo.pause();
-                        }
-
-                        logo.tempo.resume();
-                    }
-
-                    playingWidget = true;
-                    logo.rhythmRuler.playAll();
-                }
-
-                // We were using the run button to play a widget, not
-                // the turtles.
-                if (playingWidget) {
-                    return;
-                }
-
-                // Restart tempo widget and run blocks.
+            if (docById('rulerDiv').style.visibility === 'visible') {
+                // If the tempo widget is open, sync it up with the
+                // rhythm ruler.
                 if (docById('tempoDiv').style.visibility === 'visible') {
                     if (logo.tempo.isMoving) {
                         logo.tempo.pause();
@@ -665,143 +697,125 @@ define(MYDEFINES, function (compatibility) {
 
                     logo.tempo.resume();
                 }
+
+                playingWidget = true;
+                logo.rhythmRuler.playAll();
             }
 
-            if (!turtles.running()) {
-                console.log('running');
-                logo.hideBlocks(true);
-                logo.runLogoCommands(null, env);
-            } else {
-                if (currentDelay !== 0) {
-                    // keep playing at full speed
-                    console.log('running from step');
-                    logo.step();
-                } else {
-                    // stop and restart
-                    console.log('stopping...');
-                    logo.doStopTurtle();
-
-                    setTimeout(function () {
-                        console.log('and running');
-                        logo.runLogoCommands(null, env);
-                    }, 500);
-                }
-            }
-        };
-
-        function _doSlowButton() {
-            hideDOMLabel();
-
-            stage.on('stagemousemove', function (event) {
-                stageX = event.stageX;
-                stageY = event.stageY;
-            });
-
-            logo.setTurtleDelay(DEFAULTDELAY);
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                logo.synth.resume();
-            }
-
-            if (_THIS_IS_MUSIC_BLOCKS_ && docById('ptmDiv').style.visibility === 'visible') {
-                logo.pitchTimeMatrix.playAll();
-            } else if (!turtles.running()) {
-                logo.runLogoCommands();
-            } else {
-                logo.step();
-            }
-        };
-
-        function _doStepButton() {
-            hideDOMLabel();
-
-            stage.on('stagemousemove', function (event) {
-                stageX = event.stageX;
-                stageY = event.stageY;
-            });
-
-            var turtleCount = Object.keys(logo.stepQueue).length;
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                logo.synth.resume();
-            }
-
-            if (turtleCount === 0 || logo.turtleDelay !== TURTLESTEP) {
-                // Either we haven't set up a queue or we are
-                // switching modes.
-                logo.setTurtleDelay(TURTLESTEP);
-                // Queue and take first step.
-                if (!turtles.running()) {
-                    logo.runLogoCommands();
-                }
-                logo.step();
-            } else {
-                logo.setTurtleDelay(TURTLESTEP);
-                logo.step();
-            }
-        };
-
-        function _doSlowMusicButton() {
-            hideDOMLabel();
-
-            stage.on('stagemousemove', function (event) {
-                stageX = event.stageX;
-                stageY = event.stageY;
-            });
-
-            logo.setNoteDelay(DEFAULTDELAY);
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                logo.synth.resume();
-            }
-
-            if (docById('ptmDiv').style.visibility === 'visible') {
-                logo.pitchTimeMatrix.playAll();
-            } else if (!turtles.running()) {
-                logo.runLogoCommands();
-            } else {
-                logo.stepNote();
-            }
-        };
-
-        function _doStepMusicButton() {
-            hideDOMLabel();
-
-            stage.on('stagemousemove', function (event) {
-                stageX = event.stageX;
-                stageY = event.stageY;
-            });
-
-            var turtleCount = Object.keys(logo.stepQueue).length;
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                logo.synth.resume();
-            }
-
-            if (turtleCount === 0 || logo.TurtleDelay !== TURTLESTEP) {
-                // Either we haven't set up a queue or we are
-                // switching modes.
-                logo.setTurtleDelay(TURTLESTEP);
-                // Queue and take first step.
-                if (!turtles.running()) {
-                    logo.runLogoCommands();
-                }
-                logo.stepNote();
-            } else {
-                logo.setTurtleDelay(TURTLESTEP);
-                logo.stepNote();
-            }
-        };
-
-        function doHardStopButton(onblur) {
-            hideDOMLabel();
-
-            if (onblur == undefined) {
-                onblur = false;
-            }
-
-            if (onblur && _THIS_IS_MUSIC_BLOCKS_ && logo.recordingStatus()) {
-                console.log('ignoring hard stop due to blur');
+            // We were using the run button to play a widget, not
+            // the turtles.
+            if (playingWidget) {
                 return;
             }
 
-            logo.doStopTurtle();
+            // Restart tempo widget and run blocks.
+            if (docById('tempoDiv').style.visibility === 'visible') {
+                if (logo.tempo.isMoving) {
+                    logo.tempo.pause();
+                }
+
+                logo.tempo.resume();
+            }
+        }
+
+        if (!turtles.running()) {
+            console.log('RUNNING');
+            if (!turtles.isShrunk) {
+                logo.hideBlocks(true);
+            }
+
+            logo.runLogoCommands(null, env);
+        } else {
+            if (currentDelay !== 0) {
+                // keep playing at full speed
+                console.log('RUNNING FROM STEP');
+                logo.step();
+            } else {
+                // stop and restart
+                console.log('STOPPING...');
+                document.getElementById('stop').style.color = 'white';
+                logo.doStopTurtle();
+
+                setTimeout(function () {
+                    console.log('AND RUNNING');
+                    document.getElementById('stop').style.color = '#ea174c';
+
+                    logo.runLogoCommands(null, env);
+                }, 500);
+            }
+        }
+    };
+
+    /*
+     * Runs music blocks at a slower rate
+     */
+    this._doSlowButton = function () {
+        blocks.activeBlock = null;
+        hideDOMLabel();
+
+        logo.setTurtleDelay(DEFAULTDELAY);
+        if (_THIS_IS_MUSIC_BLOCKS_) {
+            logo.synth.resume();
+        }
+
+        if (_THIS_IS_MUSIC_BLOCKS_ && docById('ptmDiv').style.visibility === 'visible') {
+            logo.pitchTimeMatrix.playAll();
+        } else if (!turtles.running()) {
+            logo.runLogoCommands();
+        } else {
+            logo.step();
+        }
+    };
+
+    /*
+     * Runs music blocks step by step
+     */
+    _doStepButton = function () {
+        blocks.activeBlock = null;
+        hideDOMLabel();
+
+        var turtleCount = Object.keys(logo.stepQueue).length;
+        if (_THIS_IS_MUSIC_BLOCKS_) {
+            logo.synth.resume();
+        }
+
+        if (turtleCount === 0 || logo.turtleDelay !== TURTLESTEP) {
+            // Either we haven't set up a queue or we are
+            // switching modes.
+            logo.setTurtleDelay(TURTLESTEP);
+            // Queue and take first step.
+            if (!turtles.running()) {
+                logo.runLogoCommands();
+            }
+            logo.step();
+        } else {
+            logo.setTurtleDelay(TURTLESTEP);
+            logo.step();
+        }
+    };
+
+    /*
+     * @param onblur {when object loses focus}
+     *
+     * Stops running of music blocks.
+     * Stops all mid-way synths
+     */
+    this.doHardStopButton = function (onblur) {
+        blocks.activeBlock = null;
+        hideDOMLabel();
+
+        if (onblur == undefined) {
+            onblur = false;
+        }
+
+        if (onblur && _THIS_IS_MUSIC_BLOCKS_ && logo.recordingStatus()) {
+            console.log('Ignoring hard stop due to blur');
+            return;
+        }
+
+        logo.doStopTurtle();
+
+        if (_THIS_IS_MUSIC_BLOCKS_) {
             logo._setMasterVolume(0);
 
             if (docById('tempoDiv') != null && docById('tempoDiv').style.visibility === 'visible') {
@@ -809,1113 +823,3781 @@ define(MYDEFINES, function (compatibility) {
                     logo.tempo.pause();
                 }
             }
-        };
+        }
+    };
 
-        function _doSwitchMode() {
-            if (beginnerMode) {
-                textMsg(_('Refresh your browser to change to advanced mode.'));
-                localStorage.setItem('beginnerMode', false);
-            } else {
-                textMsg(_('Refresh your browser to change to beginner mode.'));
-                localStorage.setItem('beginnerMode', true);
-            }
-        };
+    /*
+     * Switches between beginner/advanced mode
+     */
+    doSwitchMode = function () {
+        blocks.activeBlock = null;
+        var mode = localStorage.beginnerMode;
 
-        function doStopButton() {
-            logo.doStopTurtle();
-        };
+        if (mode === null || mode === 'true') {
+            textMsg(_('Refresh your browser to change to advanced mode.'));
+            localStorage.setItem('beginnerMode', false);
+        } else {
+            textMsg(_('Refresh your browser to change to beginner mode.'));
+            localStorage.setItem('beginnerMode', true);
+        }
 
-        function doMuteButton() {
-            logo._setMasterVolume(0);
-        };
+        refreshCanvas();
+    };
 
-        function _hideBoxes() {
-            hideDOMLabel();
+    // DEPRECATED
+    doStopButton = function () {
+        blocks.activeBlock = null;
+        logo.doStopTurtle();
+    };
 
-            pasteBox.hide();
-            clearBox.hide();
-            saveBox.hide();
-            languageBox.hide();
-            utilityBox.hide();
-            playbackBox.hide();
-        };
+    // function doMuteButton() {
+    //     logo._setMasterVolume(0);
+    // };
 
-        function _doCartesianPolar() {
-            if (cartesianBitmap.visible && polarBitmap.visible) {
-                _hideCartesian();
-                //.TRANS: hide Polar coordinate overlay grid
-                gridButtonLabel.text = _('hide grid');
-                gridImages[1].visible = false;
-                gridImages[2].visible = false;
-                gridImages[3].visible = true;
-            } else if (!cartesianBitmap.visible && polarBitmap.visible) {
-                _hidePolar();
-                //.TRANS: show Cartesian coordinate overlay grid
-                gridButtonLabel.text = _('Cartesian');
-                gridImages[1].visible = false;
-                gridImages[2].visible = false;
-                gridImages[3].visible = false;
-            } else if (!cartesianBitmap.visible && !polarBitmap.visible) {
-                _showCartesian();
-                gridButtonLabel.text = _('Cartesian') + ' + ' + _('Polar');
-                gridImages[1].visible = true;
-                gridImages[2].visible = false;
-                gridImages[3].visible = false;
-            } else if (cartesianBitmap.visible && !polarBitmap.visible) {
-                _showPolar();
-                //.TRANS: show Polar coordinate overlay grid
-                gridButtonLabel.text = _('Polar');
-                gridImages[1].visible = false;
-                gridImages[2].visible = true;
-                gridImages[3].visible = false;
-            }
+    // function _hideBoxes() {
+    //     blocks.activeBlock = null;
+    //     hideDOMLabel();
 
+    //     pasteBox.hide();
+    // };
+
+    /*
+     * Initialises the functionality of the horizScrollIcon
+     */
+    function setScroller() {
+        blocks.activeBlock = null;
+        scrollBlockContainer = !scrollBlockContainer;
+        scrollPaletteContainer = !scrollPaletteContainer;
+        var enableHorizScrollIcon = docById('enableHorizScrollIcon');
+        var disableHorizScrollIcon = docById('disableHorizScrollIcon');
+        if (scrollBlockContainer && !beginnerMode){
+          enableHorizScrollIcon.style.display = 'none';
+          disableHorizScrollIcon.style.display = 'block';
+        }else{
+          enableHorizScrollIcon.style.display = 'block';
+          disableHorizScrollIcon.style.display = 'none';
+        }
+    };
+
+    /*
+     * @param chartBitmap bitmap of analysis charts
+     * @param ctx canvas
+     * Renders close icon and functionality to
+     * stop analytics of the MB project
+     */
+    this.closeAnalytics = function (chartBitmap, ctx) {
+        blocks.activeBlock = null;
+        var button = this;
+        button.x = (canvas.width / (2 * turtleBlocksScale)) + (300 / Math.sqrt(2));
+        button.y = 200.0;
+        this.closeButton = _makeButton(CANCELBUTTON, _('Close'), button.x, button.y, 55, 0);
+        this.closeButton.on('click', function (event) {
+            button.closeButton.visible = false;
+            stage.removeChild(chartBitmap);
+            logo.showBlocks();
             update = true;
-        };
+            ctx.clearRect(0, 0, 600, 600);
+        });
+    };
 
-        function toggleScroller() {
-            scrollBlockContainer = !scrollBlockContainer;
-        };
+    /*
+     * @param canvas {compares existing canvas with a new blank canvas}
+     * @return {boolean} {if canvas is blank }
+     * Checks if the canvas is blank
+     */
+    function _isCanvasBlank(canvas) {
+        var blank = document.createElement('canvas');
+        blank.width = canvas.width;
+        blank.height = canvas.height;
+        return canvas.toDataURL() == blank.toDataURL();
+    };
 
-        function closeAnalytics(chartBitmap, ctx) {
-            var button = this;
-            button.x = (canvas.width / (2 * turtleBlocksScale))  + (300 / Math.sqrt(2));
-            button.y = 300.00 - (300.00 / Math.sqrt(2));
-            this.closeButton = _makeButton('cancel-button', _('Close'), button.x, button.y, 55, 0);
-            this.closeButton.on('click', function (event) {
-                console.log('Deleting Chart');
-                button.closeButton.visible = false;
-                stage.removeChild(chartBitmap);
-                logo.showBlocks();
+
+    /*
+     * Renders and carries out analysis
+     * of the MB project
+     */
+    closeAnalytics = this.closeAnalytics;
+    var th = this;
+    doAnalytics = function () {
+        toolbar.closeAuxToolbar(_showHideAuxMenu);
+        blocks.activeBlock = null;
+        myChart = docById('myChart');
+
+        if (_isCanvasBlank(myChart) == false) {
+            return;
+        }
+
+        ctx = myChart.getContext('2d');
+        loading = true;
+        document.body.style.cursor = 'wait';
+        myRadarChart = null;
+        scores = analyzeProject(blocks);
+        data = scoreToChartData(scores);
+        Analytics = this;
+        Analytics.close = th.closeAnalytics;
+
+        __callback = function () {
+            imageData = myRadarChart.toBase64Image();
+            img = new Image();
+            img.onload = function () {
+                chartBitmap = new createjs.Bitmap(img);
+                stage.addChild(chartBitmap);
+                chartBitmap.x = (canvas.width / (2 * turtleBlocksScale)) - (300);
+                chartBitmap.y = 200;
+                chartBitmap.scaleX = chartBitmap.scaleY = chartBitmap.scale = 600 / chartBitmap.image.width;
+                logo.hideBlocks();
                 update = true;
-                ctx.clearRect(0, 0, 600, 600);
-            });
-        };
-
-        function _isCanvasBlank(canvas) {
-            var blank = document.createElement('canvas');
-            blank.width = canvas.width;
-            blank.height = canvas.height;
-            return canvas.toDataURL() == blank.toDataURL();
-        };
-
-        function doAnalytics() {
-            var myChart = docById('myChart');
-
-             if(_isCanvasBlank(myChart) == false) {
-                return ;
-             }
-
-            var ctx = myChart.getContext('2d');
-            loading = true;
-            document.body.style.cursor = 'wait';
-            var myRadarChart = null;
-            var scores = analyzeProject(blocks);
-            console.log(scores);
-            var data = scoreToChartData(scores);
-            var Analytics = this;
-            Analytics.close = closeAnalytics;
-
-            var __callback = function () {
-                var imageData = myRadarChart.toBase64Image();
-                var img = new Image();
-                img.onload = function () {
-                    var chartBitmap = new createjs.Bitmap(img);
-                    stage.addChild(chartBitmap);
-                    chartBitmap.x = (canvas.width / (2 * turtleBlocksScale)) - (300);
-                    chartBitmap.y = 0;
-                    chartBitmap.scaleX = chartBitmap.scaleY = chartBitmap.scale = 600 / chartBitmap.image.width;
-                    logo.hideBlocks();
-                    update = true;
-                    document.body.style.cursor = 'default';
-                    loading = false;
-                    Analytics.close(chartBitmap, ctx);
-                };
-                img.src = imageData;
+                document.body.style.cursor = 'default';
+                loading = false;
+                Analytics.close(chartBitmap, ctx);
             };
-
-            var options = getChartOptions(__callback);
-            console.log('creating new chart');
-            myRadarChart = new Chart(ctx).Radar(data, options);
+            img.src = imageData;
         };
 
-        function doOptimize (state) {
-            console.log('Setting optimize to ' + state);
-            logo.setOptimize(state);
-        };
+        options = getChartOptions(__callback);
+        myRadarChart = new Chart(ctx).Radar(data, options);
+    };
 
-        function doBiggerFont() {
-            hideDOMLabel();
+    // DEPRECATED
+    function doOptimize(state) {
+        blocks.activeBlock = null;
+        console.log('Setting optimize to ' + state);
+        logo.setOptimize(state);
+    };
+    /*
+     * Increases block size
+     */
+    doLargerBlocks = function () {
+        blocks.activeBlock = null;
+        // hideDOMLabel();
 
+        if (!resizeDebounce) {
             if (blockscale < BLOCKSCALES.length - 1) {
+                resizeDebounce = true;
                 blockscale += 1;
                 blocks.setBlockScale(BLOCKSCALES[blockscale]);
+                setTimeout(function () {
+                    resizeDebounce = false;
+                }, 3000);
             }
 
-            if (BLOCKSCALES[blockscale] > 1) {
-                utilityBox._decreaseStatus = true;
-            }
+            setSmallerLargerStatus();
+        }
+    };
 
-            if (BLOCKSCALES[blockscale] == 4) {
-                utilityBox._increaseStatus = false;
-            }
-        };
+    /*
+     * Decreases block size
+     */
+    doSmallerBlocks = function () {
+        blocks.activeBlock = null;
+        // hideDOMLabel();
 
-        function doSmallerFont() {
-            hideDOMLabel();
-
+        if (!resizeDebounce) {
             if (blockscale > 0) {
+                resizeDebounce = true;
                 blockscale -= 1;
                 blocks.setBlockScale(BLOCKSCALES[blockscale]);
             }
-
-            if (BLOCKSCALES[blockscale] == 1) {
-                utilityBox._decreaseStatus = false;
+                setTimeout(function () {
+                    resizeDebounce = false;
+                }, 3000);
             }
 
-            if (BLOCKSCALES[blockscale] < 4) {
-                utilityBox._increaseStatus = true;
-            } 
-        };
+        setSmallerLargerStatus();
+    };
 
-        function deletePlugin() {
-            palettes.paletteObject._promptPaletteDelete();
-        };
+    /*
+     * If either the block size has reached its minimum or maximum
+     * then the icons to make them smaller/bigger will be hidden
+     */
+    setSmallerLargerStatus = function () {
+        if (BLOCKSCALES[blockscale] > 1) {
+            smallerContainer.visible = true;
+            smallerOffContainer.visible = false;
+        } else {
+            smallerOffContainer.visible = true;
+            smallerContainer.visible = false;
+        }
 
-        function getPlaybackQueueStatus () {
-            return Object.keys(logo.playbackQueue).length > 0;
-        };
+        if (BLOCKSCALES[blockscale] == 4) {
+            largerOffContainer.visible = true;
+            largerContainer.visible = false;
+        } else {
+            largerContainer.visible = true;
+            largerOffContainer.visible = false;
+        }
+    };
 
-        function setPlaybackStatus () {
-            if (playbackBox != null) {
-                playbackBox.setPlaybackStatus();
+    /*
+     * Removes loaded plugin
+     */
+    deletePlugin = function () {
+        toolbar.closeAuxToolbar(_showHideAuxMenu);
+        blocks.activeBlock = null;
+        if (palettes.paletteObject !== null) {
+            palettes.paletteObject.promptPaletteDelete();
+        } else {
+            // look to see if My Blocks palette is visible
+            if (palettes.buttons['myblocks'].visible) {
+                console.log(palettes.dict['myblocks'].visible);
+                if (palettes.dict['myblocks'].visible) {
+                    palettes.dict['myblocks'].promptMacrosDelete();
+                }
             }
+        }
+    };
+
+    // function getPlaybackQueueStatus() {
+    //     return Object.keys(logo.playbackQueue).length > 0;
+    // };
+
+    function setPlaybackStatus() {
+        // if (playbackBox != null) {
+        //     playbackBox.setPlaybackStatus();
+        // }
+    };
+
+    // function doPausePlayback() {
+    //     blocks.activeBlock = null;
+    //     logo.restartPlayback = false;
+    //     logo.playback(-1);
+    //     // playbackBox.playButton.visible = true;
+    //     // playbackBox.pauseButton.visible = false;
+    // };
+
+    // function doPlayback() {
+    //     blocks.activeBlock = null;
+    //     progressBar.style.visibility = 'visible';
+    //     progressBar.style.left = (playbackBox.getPos()[0] + 10) * turtleBlocksScale + 'px';
+    //     progressBar.style.top = (playbackBox.getPos()[1] + 10) * turtleBlocksScale + 'px';
+    //     logo.playback(-1);
+    //     // playbackBox.playButton.visible = false;
+    //     // playbackBox.pauseButton.visible = true;
+    //     // playbackBox.norewindButton.visible = false;
+    //     // playbackBox.rewindButton.visible = true;
+    // };
+
+    // function doRestartPlayback() {
+    //     blocks.activeBlock = null;
+    //     logo.doStopTurtle();
+    //     logo.restartPlayback = true;
+
+    //     /*
+    //     setTimeout(function () {
+    //         // logo.playback(-1);
+    //         playbackBox.playButton.visible = true;
+    //         playbackBox.pauseButton.visible = false;
+    //         playbackBox.norewindButton.visible = true;
+    //         playbackBox.rewindButton.visible = false;
+    //     }, 500);
+    //     */
+    // };
+
+    // // Deprecated
+    // function doCompile() {
+    //     blocks.activeBlock = null;
+    //     logo.restartPlayback = true;
+    //     document.body.style.cursor = 'wait';
+    //     console.log('Compiling music for playback');
+
+    //     // Suppress music and turtle output when generating
+    //     // compiled output.
+    //     logo.setTurtleDelay(0); // Compile at full speed.
+    //     logo.playbackQueue = {};
+    //     logo.playbackTime = 0;
+    //     logo.compiling = true;
+    //     logo.runLogoCommands();
+    // };
+
+    /*
+     * Hides all grids (Cartesian/polar)
+     */
+    hideGrids = function () {
+        turtles.setGridLabel(_('show Cartesian'));
+        _hideCartesian();
+        _hidePolar();
+    };
+
+    /*
+     * Renders Cartesian/Polar grids and changes button labels accordingly
+     */
+    _doCartesianPolar = function () {
+        if (cartesianBitmap.visible && polarBitmap.visible) {
+            _hideCartesian();
+            //.TRANS: hide Polar coordinate overlay grid
+            turtles.setGridLabel(_('hide Polar'));
+        } else if (!cartesianBitmap.visible && polarBitmap.visible) {
+            _hidePolar();
+            //.TRANS: show Cartesian coordinate overlay grid
+            turtles.setGridLabel(_('show Cartesian'));
+        } else if (!cartesianBitmap.visible && !polarBitmap.visible) {
+            _showCartesian();
+            turtles.setGridLabel(_('show Polar'));
+        } else if (cartesianBitmap.visible && !polarBitmap.visible) {
+            _showPolar();
+            //.TRANS: show Polar coordinate overlay grid
+            turtles.setGridLabel(_('hide Cartersian'));
+        }
+
+        update = true;
+    };
+
+    /*
+     * Sets up block actions with regards to different mouse events
+     */
+    this._setupBlocksContainerEvents = function () {
+        var moving = false;
+        var lastCoords = {
+            x: 0,
+            y: 0,
+            delta: 0
         };
 
-        function doPausePlayback () {
-            logo.restartPlayback = false;
-            logo.playback(-1);
-            playbackBox.playButton.visible = true;
-            playbackBox.pauseButton.visible = false;
-        };
-
-        function doPlayback() {
-            progressBar.style.visibility = 'visible';
-            progressBar.style.left = (playbackBox.getPos()[0] + 10) * turtleBlocksScale + 'px';
-            progressBar.style.top = (playbackBox.getPos()[1] + 10) * turtleBlocksScale + 'px';
-            logo.playback(-1);
-            playbackBox.playButton.visible = false;
-            playbackBox.pauseButton.visible = true;
-            playbackBox.norewindButton.visible = false;
-            playbackBox.rewindButton.visible = true;
-        };
-
-        function doRestartPlayback() {
-            logo.doStopTurtle();
-            logo.restartPlayback = true;
-            
-            setTimeout(function () {
-                // logo.playback(-1);
-                playbackBox.playButton.visible = true;
-                playbackBox.pauseButton.visible = false;
-                playbackBox.norewindButton.visible = true;
-                playbackBox.rewindButton.visible = false;
-            }, 500);
-        };
-
-        function doCompile() {
-            logo.restartPlayback = true;
-            document.body.style.cursor = 'wait';
-            console.log('Compiling music for playback');
-
-            // Suppress music and turtle output when generating
-            // compiled output.
-            logo.setTurtleDelay(0);  // Compile at full speed.
-            logo.playbackQueue = {};
-            logo.playbackTime = 0;
-            logo.compiling = true;
-            logo.runLogoCommands();
-        };
-
-        var saveLocally;
-
-        // Do we need to update the stage?
-        var update = true;
-
-        // Coordinate grid
-        var cartesianBitmap = null;
-
-        // Polar grid
-        var polarBitmap = null;
-
-        // Msg block
-        var msgText = null;
-
-        // ErrorMsg block
-        var errorMsgText = null;
-        var errorMsgArrow = null;
-        var errorMsgTimeoutID = null;
-        var errorArtwork = {};
-        const ERRORARTWORK = ['emptybox', 'emptyheap', 'negroot', 'noinput', 'zerodivide', 'notanumber', 'nostack', 'notastring', 'nomicrophone'];
-
-        // Get things started
-        init();
-
-        function init() {
-            if (sugarizerCompatibility.isInsideSugarizer()) {
-                //sugarizerCompatibility.data.blocks = prepareExport();
-                storage = sugarizerCompatibility.data;
-            } else {
-                storage = localStorage;
+        var __paletteWheelHandler = function (event) {
+            // vertical scroll
+            if (event.deltaY != 0 && event.axis === event.VERTICAL_AXIS) {
+                if (palettes.paletteVisible) {
+                    if (event.clientX > cellSize + MENUWIDTH) {
+                        palettesContainer.y -= event.deltaY;
+                    }
+                } else {
+                    if (event.clientX > cellSize) {
+                        palettesContainer.y -= event.deltaY;
+                    }
+                }
             }
 
-            docById('loader').className = 'loader';
-
-            stage = new createjs.Stage(canvas);
-            createjs.Touch.enable(stage);
-
-            createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
-            createjs.Ticker.framerate = 30;
-            // createjs.Ticker.addEventListener('tick', stage);
-            createjs.Ticker.addEventListener('tick', __tick);
-
-            _createMsgContainer('#ffffff', '#7a7a7a', function (text) {
-                msgText = text;
-            }, 55);
-
-            _createMsgContainer('#ffcbc4', '#ff0031', function (text) {
-                errorMsgText = text;
-            }, 110);
-
-            _createErrorContainers();
-
-            /* Z-Order (top to bottom):
-             *   menus
-             *   palettes
-             *   blocks
-             *   trash
-             *   turtles
-             *   logo (drawing)
-             */
-            palettesContainer = new createjs.Container();
-            blocksContainer = new createjs.Container();
-            trashContainer = new createjs.Container();
-            turtleContainer = new createjs.Container();
-
-            stage.addChild(turtleContainer, trashContainer, blocksContainer, palettesContainer);
-            _setupBlocksContainerEvents();
-
-            trashcan = new Trashcan();
-            trashcan
-                .setCanvas(canvas)
-                .setStage(trashContainer)
-                .setSize(cellSize)
-                .setRefreshCanvas(refreshCanvas)
-                .init();
-
-            turtles = new Turtles();
-            turtles
-                .setCanvas(canvas)
-                .setStage(turtleContainer)
-                .setRefreshCanvas(refreshCanvas);
-
-            // Put the boundary in the blocks container so it scrolls
-            // with the blocks.
-            boundary = new Boundary();
-            boundary
-                .setStage(blocksContainer)
-                .init();
-
-            blocks = new Blocks();
-            blocks
-                .setCanvas(canvas)
-                .setStage(blocksContainer)
-                .setRefreshCanvas(refreshCanvas)
-                .setTrashcan(trashcan)
-                .setUpdateStage(stage.update)
-                .setGetStageScale(getStageScale)
-                .setTurtles(turtles)
-                .setSetPlaybackStatus(setPlaybackStatus)
-                .setErrorMsg(errorMsg)
-                .setContextMenu(piemenuContext);
-            blocks.makeCopyPasteButtons(_makeButton, updatePasteButton);
-
-            turtles.setBlocks(blocks);
-
-            palettes = new Palettes();
-            palettes
-                .setCanvas(canvas)
-                .setStage(palettesContainer)
-                .setRefreshCanvas(refreshCanvas)
-                .setSize(cellSize)
-                .setTrashcan(trashcan)
-                .setBlocks(blocks)
-                .init();
-
-            initPalettes(palettes);
-
-            logo = new Logo();
-            logo
-                .setCanvas(canvas)
-                .setBlocks(blocks)
-                .setTurtles(turtles)
-                .setStage(turtleContainer)
-                .setRefreshCanvas(refreshCanvas)
-                .setTextMsg(textMsg)
-                .setErrorMsg(errorMsg)
-                .setHideMsgs(hideMsgs)
-                .setOnStopTurtle(onStopTurtle)
-                .setOnRunTurtle(onRunTurtle)
-                .setGetStageX(getStageX)
-                .setGetStageY(getStageY)
-                .setGetStageMouseDown(getStageMouseDown)
-                .setGetCurrentKeyCode(getCurrentKeyCode)
-                .setClearCurrentKeyCode(clearCurrentKeyCode)
-                .setMeSpeak(meSpeak)
-                .setSetPlaybackStatus(setPlaybackStatus);
-
-            blocks.setLogo(logo);
-
-            // Set the default background color...
-            logo.setBackgroundColor(-1);
-
-            pasteBox = new PasteBox();
-            pasteBox
-                .setCanvas(canvas)
-                .setStage(stage)
-                .setRefreshCanvas(refreshCanvas)
-                .setPaste(paste);
-
-            languageBox = new LanguageBox();
-            languageBox
-                .setCanvas(canvas)
-                .setStage(stage)
-                .setMessage(errorMsg)
-                .setRefreshCanvas(refreshCanvas);
-
-            utilityBox = new UtilityBox();
-            console.log(utilityBox);
-            utilityBox
-                .setStage(stage)
-                .setRefreshCanvas(refreshCanvas)
-                .setBigger(doBiggerFont)
-                .setSmaller(doSmallerFont)
-                .setPlugins(doOpenPlugin)
-                .deletePlugins(deletePlugin)
-                .setStats(doAnalytics)
-                .setSearch(showSearchWidget, hideSearchWidget)
-                .setScroller(toggleScroller)
-                .setLanguage(doLanguageBox, languageBox)
-                .setOptimize(doOptimize);
-
-            playbackBox = new PlaybackBox();
-            playbackBox
-                .setStage(stage)
-                .setRefreshCanvas(refreshCanvas)
-                .setQueueStatus(getPlaybackQueueStatus)
-                .setPlay(doPlayback)
-                .setCompile(doCompile)
-                .setPause(doPausePlayback)
-                .setRewind(doRestartPlayback);
-
-            playbackOnLoad = function() {
-                if (_THIS_IS_TURTLE_BLOCKS_) {
-                    // Play playback queue if there is one.
-                    for (turtle in logo.playbackQueue) {
-                        if (logo.playbackQueue[turtle].length > 0) {
-                            setTimeout(function () {
-                                logo.playback(-1);
-                            }, 3000);
-                            break;
+            // horizontal scroll
+            if (scrollPaletteContainer) {
+                if (event.deltaX != 0 && event.axis === event.HORIZONTAL_AXIS) {
+                    if (palettes.paletteVisible) {
+                        if (event.clientX > cellSize + MENUWIDTH) {
+                            palettesContainer.x -= event.deltaX;
+                        }
+                    } else {
+                        if (event.clientX > cellSize) {
+                            palettesContainer.x -= event.deltaX;
                         }
                     }
                 }
+            } else {
+                event.preventDefault();
+            }
+
+            refreshCanvas();
+        };
+
+
+      var myCanvas = docById('myCanvas')
+
+      var __heightBasedScroll = function (event) {
+
+          actualReszieHandler(); //check size during init 
+          
+          window.addEventListener("resize",resizeThrottler,false);
+
+          var resizeTimeout;
+
+          function resizeThrottler() {
+            //ignore resize events as long as an actualResizeHandler execution is in queue
+              if(!resizeTimeout) {
+                  resizeTimeout = setTimeout(function () {
+                      resizeTimeout = null;
+                      actualReszieHandler();
+
+                      // The actualResizeHandler will execute at the rate of 15fps
+                  }, 66);
+              }
+            
+          }
+
+      }
+      
+
+    
+      function actualReszieHandler () {
+
+        //handle the resize event
+
+         var h = window.innerHeight;
+
+         if (h < 500) { //activate on mobile
+             myCanvas.addEventListener('wheel', __paletteWheelHandler,false)
+         }else {
+             //cleanup event listeners
+            myCanvas.removeEventListener('wheel', __paletteWheelHandler)
+         }
+          
+      }
+      __heightBasedScroll()
+
+
+        var __wheelHandler = function (event) {
+            // vertical scroll
+            if (event.deltaY != 0 && event.axis === event.VERTICAL_AXIS) {
+                if (palettes.paletteVisible) {
+                    if (event.clientX > cellSize + MENUWIDTH) {
+                        blocksContainer.y -= event.deltaY;
+                    }
+                } else {
+                    if (event.clientX > cellSize) {
+                        blocksContainer.y -= event.deltaY;
+                    }
+                }
+            }
+
+            // horizontal scroll
+            if (scrollBlockContainer) {
+                if (event.deltaX != 0 && event.axis === event.HORIZONTAL_AXIS) {
+                    if (palettes.paletteVisible) {
+                        if (event.clientX > cellSize + MENUWIDTH) {
+                            blocksContainer.x -= event.deltaX;
+                        }
+                    } else {
+                        if (event.clientX > cellSize) {
+                            blocksContainer.x -= event.deltaX;
+                        }
+                    }
+                }
+            } else {
+                event.preventDefault();
+            }
+
+            refreshCanvas();
+        };
+
+        docById('myCanvas').addEventListener('wheel', __wheelHandler, false);
+    
+
+        var __stageMouseUpHandler = function (event) {
+            stageMouseDown = false;
+            moving = false;
+
+            if (stage.getObjectUnderPoint() === null && lastCoords.delta < 4) {
+                stageX = event.stageX;
+                stageY = event.stageY;
+            }
+
+        };
+
+        stage.on('stagemousemove', function (event) {
+            stageX = event.stageX;
+            stageY = event.stageY;
+        });
+
+        stage.on('stagemousedown', function (event) {
+            stageMouseDown = true;
+            if (stage.getObjectUnderPoint() !== null | turtles.running()) {
+                stage.removeAllEventListeners('stagemouseup');
+                stage.on('stagemouseup', __stageMouseUpHandler);
+                return;
+            }
+
+            moving = true;
+            lastCoords = {
+                x: event.stageX,
+                y: event.stageY,
+                delta: 0
             };
 
-            function PlanetInterface(storage) {
-                this.planet = null;
-                this.iframe = null;
-                this.mainCanvas = null;
+            hideDOMLabel();
 
-                this.hideMusicBlocks = function() {
-                    hideSearchWidget();
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        storage.setItem('isMatrixHidden', docById('ptmDiv').style.visibility);
-                        storage.setItem('isStaircaseHidden', docById('pscDiv').style.visibility);
-                        storage.setItem('isTimbreHidden', docById('timbreDiv').style.visibility);
-                        storage.setItem('isPitchDrumMatrixHidden', docById('pdmDiv').style.visibility);
-                        storage.setItem('isRhythmRulerHidden', docById('rulerDiv').style.visibility);
-                        storage.setItem('isModeWidgetHidden', docById('modeDiv').style.visibility);
-                        storage.setItem('isSliderHidden', docById('sliderDiv').style.visibility);
-                        storage.setItem('isTempoHidden', docById('tempoDiv').style.visibility);
+            stage.removeAllEventListeners('stagemousemove');
+            stage.on('stagemousemove', function (event) {
+                stageX = event.stageX;
+                stageY = event.stageY;
 
-                        if (docById('ptmDiv').style.visibility !== 'hidden') {
-                            docById('ptmDiv').style.visibility = 'hidden';
-                            docById('ptmTableDiv').style.visibility = 'hidden';
-                            docById('ptmButtonsDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('pdmDiv').style.visibility !== 'hidden') {
-                            docById('pdmDiv').style.visibility = 'hidden';
-                            docById('pdmButtonsDiv').style.visibility = 'hidden';
-                            docById('pdmTableDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('rulerDiv').style.visibility !== 'hidden') {
-                            docById('rulerDiv').style.visibility = 'hidden';
-                            docById('rulerTableDiv').style.visibility = 'hidden';
-                            docById('rulerButtonsDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('pscDiv').style.visibility !== 'hidden') {
-                            docById('pscDiv').style.visibility = 'hidden';
-                            docById('pscTableDiv').style.visibility = 'hidden';
-                            docById('pscButtonsDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('timbreDiv').style.visibility !== 'hidden') {
-                            docById('timbreDiv').style.visibility = 'hidden';
-                            docById('timbreTableDiv').style.visibility = 'hidden';
-                            docById('timbreButtonsDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('statusDiv').style.visibility !== 'hidden') {
-                            docById('statusDiv').style.visibility = 'hidden';
-                            docById('statusButtonsDiv').style.visibility = 'hidden';
-                            docById('statusTableDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('sliderDiv').style.visibility !== 'hidden') {
-                            docById('sliderDiv').style.visibility = 'hidden';
-                            docById('sliderButtonsDiv').style.visibility = 'hidden';
-                            docById('sliderTableDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('modeDiv').style.visibility !== 'hidden') {
-                            docById('modeDiv').style.visibility = 'hidden';
-                            docById('modeButtonsDiv').style.visibility = 'hidden';
-                            docById('modeTableDiv').style.visibility = 'hidden';
-                        }
-
-                        if (docById('tempoDiv').style.visibility !== 'hidden') {
-                            if (logo.tempo != null) {
-                                logo.tempo.hide();
-                            }
-                        }
-                    }
-
-                    storage.setItem('isStatusHidden', docById('statusDiv').style.visibility);
-                    logo.doStopTurtle();
-                    helpContainer.visible = false;
-                    docById('helpElem').style.visibility = 'hidden';
-                    document.querySelector('.canvasHolder').classList.add('hide');
-                    document.querySelector('#canvas').style.display = 'none';
-                    document.querySelector('#theme-color').content = '#8bc34a';
-                    setTimeout(function () {
-                        // Time to release the mouse
-                        stage.enableDOMEvents(false);
-                    }, 250);
-                    window.scroll(0, 0);
+                if (!moving) {
+                    return;
                 }
 
-                this.showMusicBlocks = function () {
-                    docById('statusDiv').style.visibility = storage.getItem('isStatusHidden');
-                    docById('statusButtonsDiv').style.visibility = storage.getItem('isStatusHidden');
-                    docById('statusTableDiv').style.visibility = storage.getItem('isStatusHidden');
+                // if we are moving the block container, deselect the active block.
+                blocks.activeBlock = null;
 
+                var delta = Math.abs(event.stageX - lastCoords.x) + Math.abs(event.stageY - lastCoords.y);
+
+                if (scrollBlockContainer) {
+                    blocksContainer.x += event.stageX - lastCoords.x;
+                }
+
+                blocksContainer.y += event.stageY - lastCoords.y;
+                lastCoords = {
+                    x: event.stageX,
+                    y: event.stageY,
+                    delta: lastCoords.delta + delta
+                };
+
+                refreshCanvas();
+            });
+
+            stage.removeAllEventListeners('stagemouseup');
+            stage.on('stagemouseup', __stageMouseUpHandler);
+        });
+    };
+
+    /*
+     * Sets up scrolling functionality in palette and across canvas
+     */
+    function scrollEvent(event) {
+        var data = event.wheelDelta || -event.detail;
+        var delta = Math.max(-1, Math.min(1, (data)));
+        var scrollSpeed = 30;
+
+        if (event.clientX < cellSize) {
+            palettes.menuScrollEvent(delta, scrollSpeed);
+            palettes.hidePaletteIconCircles();
+        } else {
+            palette = palettes.findPalette(event.clientX / turtleBlocksScale, event.clientY / turtleBlocksScale);
+            if (palette) {
+                // if we are moving the palettes, deselect the active block.
+                blocks.activeBlock = null;
+
+                palette.scrollEvent(delta, scrollSpeed);
+            }
+        }
+    };
+
+    function getStageScale() {
+        return turtleBlocksScale;
+    };
+
+    function getStageX() {
+        return turtles.screenX2turtleX(stageX / turtleBlocksScale);
+    };
+
+    function getStageY() {
+        return turtles.screenY2turtleY(stageY / turtleBlocksScale);
+    };
+
+    function getStageMouseDown() {
+        return stageMouseDown;
+    };
+
+    // function setCameraID(id) {
+    //     cameraID = id;
+    // };
+
+    /*
+     * @param imagePath {path of grid to be rendered}
+     * Renders grid
+     */
+    _createGrid = function (imagePath) {
+        var img = new Image();
+        img.src = imagePath;
+        var container = new createjs.Container();
+        stage.addChild(container);
+
+        var bitmap = new createjs.Bitmap(img);
+        container.addChild(bitmap);
+        bitmap.cache(0, 0, 1200, 900);
+
+        bitmap.x = (canvas.width - 1200) / 2;
+        bitmap.y = (canvas.height - 900) / 2;
+        bitmap.scaleX = bitmap.scaleY = bitmap.scale = 1;
+        bitmap.visible = false;
+        bitmap.updateCache();
+
+        return bitmap;
+    };
+
+    /*
+     * @param  fillColor   {inner color of message}
+     * @param  strokeColor {border of message}
+     * @param  callback    {callback function assigned to particular message}
+     * @param  y           {position on canvas}
+     * @return {description}
+     */
+    _createMsgContainer = function (fillColor, strokeColor, callback, y) {
+        var container = new createjs.Container();
+        stage.addChild(container);
+        container.x = (canvas.width - 1000) / 2;
+        container.y = y;
+        container.visible = false;
+
+        var img = new Image();
+        var svgData = MSGBLOCK.replace('fill_color', fillColor).replace(
+            'stroke_color', strokeColor);
+
+        img.onload = function () {
+            var msgBlock = new createjs.Bitmap(img);
+            container.addChild(msgBlock);
+            var text = new createjs.Text('your message here', '20px Arial', '#000000');
+            container.addChild(text);
+            text.textAlign = 'center';
+            text.textBaseline = 'alphabetic';
+            text.x = 500;
+            text.y = 30;
+
+            var bounds = container.getBounds();
+            container.cache(bounds.x, bounds.y, bounds.width, bounds.height);
+
+            var hitArea = new createjs.Shape();
+            hitArea.graphics.beginFill('#FFF').drawRect(0, 0, 1000, 42);
+            hitArea.x = 0;
+            hitArea.y = 0;
+            container.hitArea = hitArea;
+
+            container.on('click', function (event) {
+                container.visible = false;
+                // On the possibility that there was an error
+                // arrow associated with this container
+                if (errorMsgArrow != null) {
+                    errorMsgArrow.removeAllChildren(); // Hide the error arrow.
+                }
+
+                update = true;
+            });
+
+            callback(text);
+            blocks.setMsgText(text);
+        };
+
+        img.src = 'data:image/svg+xml;base64,' + window.btoa(
+            unescape(encodeURIComponent(svgData)));
+    };
+
+
+    /*
+     * Some error messages have special artwork.
+     */
+    _createErrorContainers = function () {
+        for (var i = 0; i < ERRORARTWORK.length; i++) {
+            var name = ERRORARTWORK[i];
+            _makeErrorArtwork(name);
+        }
+    };
+
+    /*
+     * @param  name {specifies svg to be rendered}
+     * renders error message with appropriate artwork
+     */
+    _makeErrorArtwork = function (name) {
+        var container = new createjs.Container();
+        stage.addChild(container);
+        container.x = (canvas.width - 1000) / 2;
+        container.y = 110;
+        errorArtwork[name] = container;
+        errorArtwork[name].name = name;
+        errorArtwork[name].visible = false;
+
+        var img = new Image();
+        img.onload = function () {
+            var artwork = new createjs.Bitmap(img);
+            container.addChild(artwork);
+            var text = new createjs.Text('', '20px Sans', '#000000');
+            container.addChild(text);
+            text.x = 70;
+            text.y = 10;
+
+            var bounds = container.getBounds();
+            container.cache(bounds.x, bounds.y, bounds.width, bounds.height);
+
+            var hitArea = new createjs.Shape();
+            hitArea.graphics.beginFill('#FFF').drawRect(0, 0, bounds.width, bounds.height);
+            hitArea.x = 0;
+            hitArea.y = 0;
+            container.hitArea = hitArea;
+
+            container.on('click', function (event) {
+                container.visible = false;
+                // On the possibility that there was an error
+                // arrow associated with this container
+                if (errorMsgArrow != null) {
+                    errorMsgArrow.removeAllChildren(); // Hide the error arrow.
+                }
+                update = true;
+            });
+        };
+
+        img.src = 'images/' + name + '.svg';
+    };
+
+    /*
+     * @param  searchWidget      {searchWidget element}
+     * @param  blocks            {all blocks}
+     * @param  searchSuggestions {suggestions from user input}
+     * @param  doSearch          {search function callback}
+     */
+    this.prepSearchWidget = function (searchWidget, blocks, searchSuggestions, doSearch) {
+        var that = this;
+        searchWidget.style.visibility = 'hidden';
+        searchBlockPosition = [100, 100];
+
+        searchSuggestions = [];
+        deprecatedBlockNames = [];
+
+        for (i in blocks.protoBlockDict) {
+            blockLabel = blocks.protoBlockDict[i].staticLabels[0];
+            if (blockLabel) {
+                if (blocks.protoBlockDict[i].deprecated) {
+                    deprecatedBlockNames.push(blockLabel);
+                } else {
+                    searchSuggestions.push(blockLabel);
+                }
+            }
+        }
+
+        searchSuggestions = searchSuggestions.reverse();
+
+        searchWidget.onclick = function () {
+            doSearch();
+        };
+    }
+
+    /*
+     * Hides search widget
+     */
+    hideSearchWidget = function () {
+        // Hide the jQuery search results widget
+        var obj = docByClass('ui-menu');
+        if (obj.length > 0) {
+            obj[0].style.visibility = 'hidden';
+        }
+
+        searchWidget.style.visibility = 'hidden';
+    };
+
+    /*
+     * Shows search widget
+     */
+    showSearchWidget = function () {
+        if (searchWidget.style.visibility === 'visible') {
+            hideSearchWidget();
+        } else {
+            var obj = docByClass('ui-menu');
+            if (obj.length > 0) {
+                obj[0].style.visibility = 'visible';
+            }
+
+            searchWidget.value = null;
+            docById('searchResults').style.visibility = 'visible';
+            searchWidget.style.visibility = 'visible';
+            searchWidget.style.left = palettes.getSearchPos()[0] * turtleBlocksScale + 'px';
+            searchWidget.style.top = palettes.getSearchPos()[1] * turtleBlocksScale + 'px';
+
+            searchBlockPosition = [100, 100];
+
+            // Give the browser time to update before selecting
+            // focus.
+            setTimeout(function () {
+                searchWidget.focus();
+                doSearch();
+            }, 500);
+        }
+    };
+
+    /*
+     * Uses JQuery to add autocompleted search suggestions
+     */
+    doSearch = function () {
+        var $j = jQuery.noConflict();
+
+        $j('#search').autocomplete({
+            source: searchSuggestions
+        });
+
+        $j('#search').autocomplete('widget').addClass('scrollSearch');
+
+        var searchInput = searchWidget.value;
+        var obj = palettes.getProtoNameAndPalette(searchInput);
+        var protoblk = obj[0];
+        var paletteName = obj[1];
+        var protoName = obj[2];
+
+        var searchResult = blocks.protoBlockDict.hasOwnProperty(protoName);
+
+        if (searchInput.length > 0) {
+            if (searchResult) {
+                palettes.dict[paletteName].makeBlockFromSearch(protoblk, protoName, function (newBlock) {
+                    blocks.moveBlock(newBlock, 100 + searchBlockPosition[0] - blocksContainer.x, searchBlockPosition[1] - blocksContainer.y);
+
+                });
+
+                // Move the position of the next newly created block.
+                searchBlockPosition[0] += STANDARDBLOCKHEIGHT;
+                searchBlockPosition[1] += STANDARDBLOCKHEIGHT;
+            } else if (deprecatedBlockNames.indexOf(searchInput) > -1) {
+                blocks.errorMsg(_('This block is deprecated.'));
+            } else {
+                blocks.errorMsg(_('Block cannot be found.'));
+            }
+
+            searchWidget.value = '';
+            update = true;
+        }
+    };
+
+    /*
+     * Makes initial "start up" note for a brand new MB project
+     */
+    __makeNewNote = function (octave, solf) {
+        var newNote = [
+            [0, 'newnote', 300 - blocksContainer.x, 300 - blocksContainer.y, [null, 1, 4, 8]],
+            [1, 'divide', 0, 0, [0, 2, 3]],
+            [2, ['number', {
+                'value': 1
+            }], 0, 0, [1]],
+            [3, ['number', {
+                'value': 4
+            }], 0, 0, [1]],
+            [4, 'vspace', 0, 0, [0, 5]],
+            [5, 'pitch', 0, 0, [4, 6, 7, null]],
+            [6, ['solfege', {
+                'value': solf
+            }], 0, 0, [5]],
+            [7, ['number', {
+                'value': octave
+            }], 0, 0, [5]],
+            [8, 'hidden', 0, 0, [0, null]]
+        ];
+
+        blocks.loadNewBlocks(newNote);
+        if (blocks.activeBlock !== null) {
+            // Connect the newly created block to the active block
+            // (if it is a hidden block at the end of a new note
+            // block).
+            var bottom = blocks.findBottomBlock(blocks.activeBlock);
+            console.log(blocks.activeBlock + ' ' + bottom);
+            if (blocks.blockList[bottom].name === 'hidden' && blocks.blockList[blocks.blockList[bottom].connections[0]].name === 'newnote') {
+
+                // The note block macro creates nine blocks.
+                var newlyCreatedBlock = blocks.blockList.length - 9;
+
+                // Set last connection of active block to the
+                // newly created block.
+                var lastConnection = blocks.blockList[bottom].connections.length - 1
+                blocks.blockList[bottom].connections[lastConnection] = newlyCreatedBlock;
+
+                // Set first connection of the newly created block to
+                // the active block.
+                blocks.blockList[newlyCreatedBlock].connections[0] = bottom;
+                // Adjust the dock positions to realign the stack.
+                blocks.adjustDocks(bottom, true);
+            }
+        }
+
+        // Set new hidden block at the end of the newly created
+        // note block to the active block.
+        blocks.activeBlock = blocks.blockList.length - 1;
+    }
+
+    /*
+     * Handles keyboard shortcuts in MB
+     */
+    function __keyPressed(event) {
+        var that = this;
+        if (docById('labelDiv').classList.contains('hasKeyboard')) {
+            return;
+        }
+
+        if (_THIS_IS_MUSIC_BLOCKS_) {
+            if (docById('BPMInput').classList.contains('hasKeyboard')) {
+                return;
+            }
+
+            if (docById('musicratio1').classList.contains('hasKeyboard')) {
+                return;
+            }
+
+            if (docById('musicratio2').classList.contains('hasKeyboard')) {
+                return;
+            }
+
+            if (docById('dissectNumber').classList.contains('hasKeyboard')) {
+                return;
+            }
+
+            if (docById('timbreName') !== null) {
+                if (docById('timbreName').classList.contains('hasKeyboard')) {
+                    return;
+                }
+            }
+        }
+
+        const BACKSPACE = 8;
+        const TAB = 9;
+
+        /*
+        if (event.keyCode === TAB || event.keyCode === BACKSPACE) {
+            // Prevent browser from grabbing TAB key
+            event.preventDefault();
+        }
+        */
+
+        const ESC = 27;
+        const ALT = 18;
+        const CTRL = 17;
+        const SHIFT = 16;
+        const RETURN = 13;
+        const SPACE = 32;
+        const HOME = 36;
+        const END = 35;
+        const PAGE_UP = 33;
+        const PAGE_DOWN = 34;
+        const KEYCODE_LEFT = 37;
+        const KEYCODE_RIGHT = 39;
+        const KEYCODE_UP = 38;
+        const KEYCODE_DOWN = 40;
+        const DEL = 46;
+        const V = 86;
+
+        // Shortcuts for creating new notes
+        const KEYCODE_D = 68; // do
+        const KEYCODE_R = 82; // re
+        const KEYCODE_M = 77; // mi
+        const KEYCODE_F = 70; // fa
+        const KEYCODE_S = 83; // so
+        const KEYCODE_L = 76; // la
+        const KEYCODE_T = 84; // ti
+
+        // Check for RETURN in search widget ahead of other events.
+        if (event.keyCode === RETURN && docById('search').value.length > 0) {
+            doSearch();
+        }
+
+        if (_THIS_IS_MUSIC_BLOCKS_) {
+            var disableKeys = docById('lilypondModal').style.display === 'block' || searchWidget.style.visibility === 'visible' || docById('planet-iframe').style.display === '' || docById('paste').style.visibility === 'visible' || docById('wheelDiv').style.display === '' || logo.turtles.running();
+        } else {
+            var disableKeys = searchWidget.style.visibility === 'visible' || docById('paste').style.visibility === 'visible' || logo.turtles.running();
+        }
+
+        var disableArrowKeys = _THIS_IS_MUSIC_BLOCKS_ && (docById('sliderDiv').style.visibility === 'visible' || docById('tempoDiv').style.visibility === 'visible');
+
+        if (event.altKey && !disableKeys) {
+            switch (event.keyCode) {
+            case 66: // 'B'
+                save.saveBlockArtwork();
+                break;
+            case 67: // 'C'
+                blocks.prepareStackForCopy();
+                break;
+            case 68: // 'D'
+                palettes.dict['myblocks'].promptMacrosDelete()
+                break;
+            case 69: // 'E'
+                _allClear();
+                break;
+            case 80: // 'P'
+                // logo.playback(-1);
+                break;
+            case 82: // 'R'
+                that._doFastButton();
+                break;
+            case 83: // 'S'
+                logo.doStopTurtle();
+                break;
+            case 86: // 'V'
+                blocks.pasteStack();
+                break;
+            }
+        } else if (event.ctrlKey) {
+            switch (event.keyCode) {
+            case V:
+                pasteBox.createBox(turtleBlocksScale, 200, 200);
+                pasteBox.show();
+                docById('paste').style.left = (pasteBox.getPos()[0] + 10) * turtleBlocksScale + 'px';
+                docById('paste').style.top = (pasteBox.getPos()[1] + 10) * turtleBlocksScale + 'px';
+                docById('paste').focus();
+                docById('paste').style.visibility = 'visible';
+                update = true;
+                break;
+            }
+        } else if (event.shiftKey && !disableKeys) {
+            switch (event.keyCode) {
+            case KEYCODE_D:
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    __makeNewNote(5, 'do');
+                }
+                break;
+            case KEYCODE_R:
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    __makeNewNote(5, 're');
+                }
+                break;
+            case KEYCODE_M:
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    __makeNewNote(5, 'mi');
+                }
+                break;
+            case KEYCODE_F:
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    __makeNewNote(5, 'fa');
+                }
+                break;
+            case KEYCODE_S:
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    __makeNewNote(5, 'sol');
+                }
+                break;
+            case KEYCODE_L:
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    __makeNewNote(5, 'la');
+                }
+                break;
+            case KEYCODE_T:
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    __makeNewNote(5, 'ti');
+                }
+                break;
+            }
+        } else {
+            if (docById('paste').style.visibility === 'visible' && event.keyCode === RETURN) {
+                if (docById('paste').value.length > 0) {
+                    pasted();
+                }
+            } else if (!disableKeys) {
+                switch (event.keyCode) {
+                case END:
+                    blocksContainer.y = -blocks.bottomMostBlock() + logo.canvas.height / 2;
+                    break;
+                case PAGE_UP:
+                    blocksContainer.y += logo.canvas.height / 2;
+                    stage.update();
+                    break;
+                case PAGE_DOWN:
+                    blocksContainer.y -= logo.canvas.height / 2;
+                    stage.update();
+                    break;
+                case DEL:
+                    blocks.extract();
+                    break;
+                case KEYCODE_UP:
+                    if (disableArrowKeys) {} else if (blocks.activeBlock != null) {
+                        blocks.moveStackRelative(blocks.activeBlock, 0, -STANDARDBLOCKHEIGHT / 2);
+                        blocks.blockMoved(blocks.activeBlock);
+                        blocks.adjustDocks(blocks.activeBlock, true);
+                    } else if (palettes.mouseOver) {
+                        palettes.menuScrollEvent(1, 10);
+                        palettes.hidePaletteIconCircles();
+                    } else if (palettes.activePalette != null) {
+                        palettes.activePalette.scrollEvent(STANDARDBLOCKHEIGHT, 1);
+                    } else if (scrollBlockContainer) {
+                        blocksContainer.y -= 20;
+                    }
+                    stage.update();
+                    break;
+                case KEYCODE_DOWN:
+                    if (disableArrowKeys) {} else if (blocks.activeBlock != null) {
+                        blocks.moveStackRelative(blocks.activeBlock, 0, STANDARDBLOCKHEIGHT / 2);
+                        blocks.blockMoved(blocks.activeBlock);
+                        blocks.adjustDocks(blocks.activeBlock, true);
+                    } else if (palettes.mouseOver) {
+                        palettes.menuScrollEvent(-1, 10);
+                        palettes.hidePaletteIconCircles();
+                    } else if (palettes.activePalette != null) {
+                        palettes.activePalette.scrollEvent(-STANDARDBLOCKHEIGHT, 1);
+                    } else if (scrollBlockContainer) {
+                        blocksContainer.y += 20;
+                    }
+                    stage.update();
+                    break;
+                case KEYCODE_LEFT:
+                    if (disableArrowKeys) {} else if (blocks.activeBlock != null) {
+                        blocks.moveStackRelative(blocks.activeBlock, -STANDARDBLOCKHEIGHT / 2, 0);
+                        blocks.blockMoved(blocks.activeBlock);
+                        blocks.adjustDocks(blocks.activeBlock, true);
+                    } else if (scrollBlockContainer) {
+                        blocksContainer.x -= 20;
+                    }
+                    stage.update();
+                    break;
+                case KEYCODE_RIGHT:
+                    if (disableArrowKeys) {} else if (blocks.activeBlock != null) {
+                        blocks.moveStackRelative(blocks.activeBlock, STANDARDBLOCKHEIGHT / 2, 0);
+                        blocks.blockMoved(blocks.activeBlock);
+                        blocks.adjustDocks(blocks.activeBlock, true);
+                    } else if (scrollBlockContainer) {
+                        blocksContainer.x += 20;
+                    }
+                    stage.update();
+                    break;
+                case HOME:
+                    if (palettes.mouseOver) {
+                        var dy = Math.max(55 - palettes.buttons['rhythm'].y, 0);
+                        palettes.menuScrollEvent(1, dy);
+                        palettes.hidePaletteIconCircles();
+                    } else if (palettes.activePalette != null) {
+                        palettes.activePalette.scrollEvent(-palettes.activePalette.scrollDiff, 1);
+                    } else {
+                        this._findBlocks();
+                    }
+                    stage.update();
+                    break;
+                case TAB:
+                    break;
+                case SPACE:
+                    if (turtleContainer.scaleX == 1) {
+                        turtles.scaleStage(0.5);
+                    } else {
+                        turtles.scaleStage(1);
+                    }
+                    break;
+                case ESC:
+                    if (searchWidget.style.visibility === 'visible') {
+                        searchWidget.style.visibility = 'hidden';
+                    } else {
+                        // toggle full screen
+                        // _toggleToolbar();
+                    }
+                    break;
+                case RETURN:
+                    if (disableArrowKeys) {} else if (docById('search').value.length > 0) {
+                        doSearch();
+                    } else {
+                        if (blocks.activeBlock == null || SPECIALINPUTS.indexOf(blocks.blockList[blocks.activeBlock].name) === -1) {
+                            logo.runLogoCommands();
+                        }
+                    }
+                    break;
+                case KEYCODE_D:
                     if (_THIS_IS_MUSIC_BLOCKS_) {
-                        docById('ptmDiv').style.visibility = storage.getItem('isMatrixHidden');
-                        docById('ptmButtonsDiv').style.visibility = storage.getItem('isMatrixHidden');
-                        docById('ptmTableDiv').style.visibility = storage.getItem('isMatrixHidden');
-                        docById('pscDiv').style.visibility = storage.getItem('isStaircaseHidden');
-                        docById('pscButtonsDiv').style.visibility = storage.getItem('isStaircaseHidden');
-                        docById('pscTableDiv').style.visibility = storage.getItem('isStaircaseHidden');
-                        docById('timbreDiv').style.visibility = storage.getItem('isTimbreHidden');
-                        docById('timbreButtonsDiv').style.visibility = storage.getItem('isTimbreHidden');
-                        docById('timbreTableDiv').style.visibility = storage.getItem('isTimbreHidden');
-                        docById('sliderDiv').style.visibility = storage.getItem('isSliderHidden');
-                        docById('sliderButtonsDiv').style.visibility = storage.getItem('isSliderHidden');
-                        docById('sliderTableDiv').style.visibility = storage.getItem('isSliderHidden');
-                        docById('pdmDiv').style.visibility = storage.getItem('isPitchDrumMatrixHidden');
-                        docById('pdmButtonsDiv').style.visibility = storage.getItem('isPitchDrumMatrixHidden');
-                        docById('pdmTableDiv').style.visibility = storage.getItem('isPitchDrumMatrixHidden');
-                        docById('rulerDiv').style.visibility = storage.getItem('isRhythmRulerHidden');
-                        docById('rulerButtonsDiv').style.visibility = storage.getItem('isRhythmRulerHidden');
-                        docById('rulerTableDiv').style.visibility = storage.getItem('isRhythmRulerHidden');
-                        docById('modeDiv').style.visibility = storage.getItem('isModeWidgetHidden');
-                        docById('modeButtonsDiv').style.visibility = storage.getItem('isModeWidgetHidden');
-                        docById('modeTableDiv').style.visibility = storage.getItem('isModeWidgetHidden');
-                        // Don't reopen the tempo widget since we didn't just hide it, but also closed it.
-                        // docById('tempoDiv').style.visibility = localStorage.getItem('isTempoHidden');
-                        // docById('tempoButtonsDiv').style.visibility = localStorage.getItem('isTempoHidden');
+                        __makeNewNote(4, 'do');
                     }
-                    document.querySelector('.canvasHolder').classList.remove('hide');
-                    document.querySelector('#canvas').style.display = '';
-                    document.querySelector('#theme-color').content = platformColor.header;
-                    stage.enableDOMEvents(true);
-                    window.scroll(0, 0);
-                };
-
-                this.showPlanet = function() {
-                    this.planet.open(this.mainCanvas.toDataURL('image/png'));
-                    this.iframe.style.display = 'block';
-                    try {
-                        this.iframe.contentWindow.document.getElementById('local-tab').click();
-                    } catch (e) {
-                        console.log(e);
+                    break;
+                case KEYCODE_R:
+                    if (_THIS_IS_MUSIC_BLOCKS_) {
+                        __makeNewNote(4, 're');
                     }
-                };
+                    break;
+                case KEYCODE_M:
+                    if (_THIS_IS_MUSIC_BLOCKS_) {
+                        __makeNewNote(4, 'mi');
+                    }
+                    break;
+                case KEYCODE_F:
+                    if (_THIS_IS_MUSIC_BLOCKS_) {
+                        __makeNewNote(4, 'fa');
+                    }
+                    break;
+                case KEYCODE_S:
+                    if (_THIS_IS_MUSIC_BLOCKS_) {
+                        __makeNewNote(4, 'sol');
+                    }
+                    break;
+                case KEYCODE_L:
+                    if (_THIS_IS_MUSIC_BLOCKS_) {
+                        __makeNewNote(4, 'la');
+                    }
+                    break;
+                case KEYCODE_T:
+                    if (_THIS_IS_MUSIC_BLOCKS_) {
+                        __makeNewNote(4, 'ti');
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
 
-                this.hidePlanet = function() {
-                    this.iframe.style.display = 'none';
-                };
+            // Always store current key so as not to mask it from
+            // the keyboard block.
+            currentKeyCode = event.keyCode;
+        }
+    };
 
-                this.openPlanet = function() {
-                    console.log('save locally');
-                    this.saveLocally();
-                    this.hideMusicBlocks();
-                    this.showPlanet();
-                };
+    /*
+     * @return currentKeyCode
+     */
+    this.getCurrentKeyCode = function () {
+        return currentKeyCode;
+    };
 
-                this.closePlanet = function() {
-                    this.hidePlanet();
-                    this.showMusicBlocks();
-                };
+    /*
+     * Sets current key code to 0
+     */
+    this.clearCurrentKeyCode = function () {
+        currentKey = '';
+        currentKeyCode = 0;
+    };
 
-                this.loadProjectFromData = function(data, merge) {
-                    if (merge===undefined) {
-                        merge=false;
+    /*
+     * Handles resizing for MB.
+     * Detects width/height changes and closes any menus before actual resize.
+     * Repositions containers/palette/home buttons
+     */
+    function _onResize(force) {
+        var $j = jQuery.noConflict();
+        console.log('document.body.clientWidth and clientHeight: ' + document.body.clientWidth + ' ' + document.body.clientHeight);
+        console.log('stored values: ' + this._clientWidth + ' ' + this._clientHeight);
+
+        console.log('window inner/outer width/height: ' + window.innerWidth + ', ' + window.innerHeight + ' ' + window.outerWidth + ', ' + window.outerHeight);
+
+
+        if (!platform.androidWebkit) {
+            var w = window.innerWidth;
+            var h = window.innerHeight;
+        } else {
+            var w = window.outerWidth;
+            var h = window.outerHeight;
+        }
+
+        // If the clientWidth hasn't changed, don't resize (except
+        // on init).
+        if (!force && this._clientWidth === document.body.clientWidth) {
+            // console.log('NO WIDTH CHANGE');
+            // return;
+        }
+
+        this._clientWidth = document.body.clientWidth;
+        this._clientHeight = document.body.clientHeight;
+        this._innerWidth = window.innerWidth;
+        this._innerHeight = window.innerHeight;
+        this._outerWidth = window.outerWidth;
+        this._outerHeight = window.outerHeight;
+
+        if (largerContainer !== null) {
+            homeButtonContainers[0].x = this._innerWidth - 4 * 55 - 27.5;
+            homeButtonContainers[1].x = homeButtonContainers[0].x;
+            hideBlocksContainer.x = homeButtonContainers[0].x;
+            collapseBlocksContainer.x = homeButtonContainers[0].x;
+            smallerContainer.x = homeButtonContainers[0].x;
+            largerContainer.x = homeButtonContainers[0].x;
+
+            homeButtonContainers[0].y = this._innerHeight - 27.5;
+            homeButtonContainers[1].y = homeButtonContainers[0].y;
+            hideBlocksContainer.y = homeButtonContainers[0].y;
+            collapseBlocksContainer.y = homeButtonContainers[0].y;
+            smallerContainer.y = homeButtonContainers[0].y;
+            largerContainer.y = homeButtonContainers[0].y;
+        }
+
+        if (docById('labelDiv').classList.contains('hasKeyboard')) {
+            return;
+        }
+
+        var smallSide = Math.min(w, h);
+
+        if (smallSide < cellSize * 9) {
+            // var mobileSize = true;
+            // FIXME
+            var mobileSize = false;
+            if (w < cellSize * 10) {
+                turtleBlocksScale = smallSide / (cellSize * 11);
+            } else {
+                turtleBlocksScale = Math.max(smallSide / (cellSize * 11), 0.75);
+            }
+        } else {
+            var mobileSize = false;
+            if (w / 1200 > h / 900) {
+                turtleBlocksScale = w / 1200;
+            } else {
+                turtleBlocksScale = h / 900;
+            }
+        }
+
+        turtleBlocksScale = 1.0;
+
+        stage.scaleX = turtleBlocksScale;
+        stage.scaleY = turtleBlocksScale;
+
+        stage.canvas.width = w;
+        stage.canvas.height = h;
+
+        turtles.setScale(w, h, turtleBlocksScale);
+
+        blocks.setScale(turtleBlocksScale);
+        boundary.setScale(w, h, turtleBlocksScale);
+
+        palettes.setScale(turtleBlocksScale);
+
+        trashcan.resizeEvent(turtleBlocksScale);
+
+        // We need to reposition the palette buttons
+        _setupPaletteMenu(turtleBlocksScale);
+
+        // Reposition coordinate grids.
+        cartesianBitmap.x = (canvas.width / (2 * turtleBlocksScale)) - (600);
+        cartesianBitmap.y = (canvas.height / (2 * turtleBlocksScale)) - (450);
+        polarBitmap.x = (canvas.width / (2 * turtleBlocksScale)) - (600);
+        polarBitmap.y = (canvas.height / (2 * turtleBlocksScale)) - (450);
+        update = true;
+
+
+
+        // Hide tooltips on mobile
+        if (platform.mobile) {
+            // palettes.setMobile(true);
+            // palettes.hide();
+            toolbar.disableTooltips($j);
+        } else {
+            palettes.setMobile(false);
+            palettes.bringToTop();
+        }
+
+        for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
+            turtles.turtleList[turtle].doClear(false, false, true);
+        }
+
+        var artcanvas = docById('overlayCanvas');
+        // Workaround for #795.5
+        if (mobileSize) {
+            artcanvas.width = w * 2;
+            artcanvas.height = h * 2;
+        } else {
+            artcanvas.width = w;
+            artcanvas.height = h;
+        }
+
+        blocks.checkBounds();
+    };
+
+    window.onresize = function () {
+        _onResize(false);
+    };
+
+    /*
+     * Restore last stack pushed to trashStack back onto canvas.
+     * Hides palettes before update
+     * Repositions blocks about trash area
+     */
+    _restoreTrash = function () {
+        for (var name in blocks.palettes.dict) {
+            blocks.palettes.dict[name].hideMenu(true);
+        }
+
+        blocks.activeBlock = null;
+        refreshCanvas();
+
+        var dx = 0;
+        var dy = -cellSize * 3; // Reposition
+
+        if (blocks.trashStacks.length === 0) {
+            console.log('Trash is empty--nothing to do');
+            return;
+        }
+
+        var thisBlock = blocks.trashStacks.pop();
+
+        // Restore drag group in trash
+        blocks.findDragGroup(thisBlock);
+        for (var b = 0; b < blocks.dragGroup.length; b++) {
+            var blk = blocks.dragGroup[b];
+            // console.log('Restoring ' + blocks.blockList[blk].name + ' from the trash.');
+            blocks.blockList[blk].trash = false;
+            blocks.moveBlockRelative(blk, dx, dy);
+            blocks.blockList[blk].show();
+        }
+
+        blocks.raiseStackToTop(thisBlock);
+
+        if (blocks.blockList[thisBlock].name === 'start' || blocks.blockList[thisBlock].name === 'drum') {
+            var turtle = blocks.blockList[thisBlock].value;
+            turtles.turtleList[turtle].trash = false;
+            turtles.turtleList[turtle].container.visible = true;
+        } else if (blocks.blockList[thisBlock].name === 'action') {
+            // We need to add a palette entry for this action.
+            // But first we need to ensure we have a unqiue name,
+            // as the name could have been taken in the interim.
+            var actionArg = blocks.blockList[blocks.blockList[thisBlock].connections[1]];
+            if (actionArg != null) {
+                var oldName = actionArg.value;
+                // Mark the action block as still being in the
+                // trash so that its name won't be considered when
+                // looking for a unique name.
+                blocks.blockList[thisBlock].trash = true;
+                var uniqueName = blocks.findUniqueActionName(oldName);
+                blocks.blockList[thisBlock].trash = false;
+
+                if (uniqueName !== actionArg) {
+                    console.log('renaming action when restoring from trash. old name: ' + oldName + ' unique name: ' + uniqueName);
+
+                    actionArg.value = uniqueName;
+
+                    var label = actionArg.value.toString();
+                    if (label.length > 8) {
+                        label = label.substr(0, 7) + '...';
+                    }
+                    actionArg.text.text = label;
+
+                    if (actionArg.label != null) {
+                        actionArg.label.value = uniqueName;
                     }
 
-                    this.closePlanet();
-                    if (!merge) {
-                        sendAllToTrash(false, true);
+                    actionArg.container.updateCache();
+
+                    // Check the drag group to ensure any do
+                    // blocks are updated (in case of recursion).
+                    for (var b = 0; b < blocks.dragGroup.length; b++) {
+                        var me = blocks.blockList[blocks.dragGroup[b]];
+                        if (['nameddo', 'nameddoArg', 'namedcalc', 'namedcalcArg'].indexOf(me.name) !== -1 && me.privateData === oldName) {
+                            console.log('reassigning nameddo to ' + uniqueName);
+                            me.privateData = uniqueName;
+                            me.value = uniqueName;
+
+                            var label = me.value.toString();
+                            if (label.length > 8) {
+                                label = label.substr(0, 7) + '...';
+                            }
+                            me.text.text = label;
+                            me.overrideName = label;
+                            me.regenerateArtwork();
+                            me.container.updateCache();
+                        }
+                    }
+                }
+
+                var actionName = actionArg.value;
+                if (actionName !== _('action')) {
+                    // blocks.checkPaletteEntries('action');
+                    console.log('FIXME: Check for unique action name here');
+                }
+            }
+        }
+
+        blocks.refreshCanvas();
+    };
+
+    /*
+     * Hides aux menu
+     */
+    hideAuxMenu = function () {
+        if (toolbarHeight > 0) {
+            _showHideAuxMenu(false);
+            menuButtonsVisible = false;
+        }
+    };
+
+    /*
+     * Sets up a new "clean" MB i.e. new project instance
+     */
+    _afterDelete = function () {
+        toolbar.closeAuxToolbar(_showHideAuxMenu);
+        sendAllToTrash(true, false);
+        if (planet !== undefined) {
+            planet.initialiseNewProject.bind(planet);
+        }
+    };
+
+
+    // function _doPlaybackBox() {
+    //     // _hideBoxes();
+    //     // playbackBox.init(turtleBlocksScale, playbackButton.x - 27, playbackButton.y, _makeButton, logo);
+    // };
+
+    /*
+     * @param {boolean} addStartBlock {if true adds a new start block to new project instance}
+     * @param {boolean} doNotSave     {if true discards any changes to project}
+     *
+     * Hide the palettes before update.
+     * Then deletes everything/sends all to trash
+     */
+    sendAllToTrash = function (addStartBlock, doNotSave) {
+        // Return to home position after loading new blocks.
+        blocksContainer.x = 0;
+        blocksContainer.y = 0;
+        for (var name in blocks.palettes.dict) {
+            blocks.palettes.dict[name].hideMenu(true);
+        }
+
+        hideDOMLabel();
+        refreshCanvas();
+
+        var actionBlockCounter = 0;
+        var dx = 0;
+        var dy = cellSize * 3;
+        for (var blk in blocks.blockList) {
+            // If this block is at the top of a stack, push it
+            // onto the trashStacks list.
+            if (blocks.blockList[blk].connections[0] == null) {
+                blocks.trashStacks.push(blk);
+            }
+
+            if (blocks.blockList[blk].name === 'start' || blocks.blockList[blk].name === 'drum') {
+                console.log('start blk ' + blk + ' value is ' + blocks.blockList[blk].value)
+                var turtle = blocks.blockList[blk].value;
+                if (!blocks.blockList[blk].trash && turtle != null) {
+                    console.log('sending turtle ' + turtle + ' to trash');
+                    turtles.turtleList[turtle].trash = true;
+                    turtles.turtleList[turtle].container.visible = false;
+                }
+            } else if (blocks.blockList[blk].name === 'action') {
+                if (!blocks.blockList[blk].trash) {
+                    blocks.deleteActionBlock(blocks.blockList[blk]);
+                    actionBlockCounter += 1;
+                }
+            }
+
+            blocks.blockList[blk].trash = true;
+            blocks.moveBlockRelative(blk, dx, dy);
+            blocks.blockList[blk].hide();
+        }
+
+        if (addStartBlock) {
+            logo.playbackQueue = {};
+            blocks.loadNewBlocks(DATAOBJS);
+            setPlaybackStatus();
+        } else if (!doNotSave) {
+            // Overwrite session data too.
+            saveLocally();
+        }
+
+        // Wait for palette to clear (#891)
+        // We really need to signal when each palette item is deleted
+        setTimeout(function () {
+            stage.dispatchEvent('trashsignal');
+        }, 100 * actionBlockCounter); // 1000
+
+        update = true;
+    };
+
+    // function _changePaletteVisibility() {
+    //     if (palettes.visible) {
+    //         palettes.hide();
+    //     } else {
+    //         palettes.show();
+    //         palettes.bringToTop();
+    //     }
+    // };
+
+    /*
+     * Toggles block/palette visibility
+     */
+    _changeBlockVisibility = function () {
+        hideDOMLabel();
+
+        if (blocks.visible) {
+            logo.hideBlocks();
+            palettes.hide();
+            hideBlocksContainer[1].visible = true;
+            hideBlocksContainer[0].visible = false;
+        } else {
+            if (chartBitmap != null) {
+                stage.removeChild(chartBitmap);
+                chartBitmap = null;
+            }
+            hideBlocksContainer[1].visible = false;
+            hideBlocksContainer[0].visible = true;
+            logo.showBlocks();
+            palettes.show();
+            palettes.bringToTop();
+        }
+
+        // Combine block and palette visibility into one button.
+        // _changePaletteVisibility();
+    };
+
+    /*
+     * Toggles collapsible stacks (if collapsed stacks expand and vice versa)
+     */
+    _toggleCollapsibleStacks = function () {
+        hideDOMLabel();
+
+        if (blocks.visible) {
+            blocks.toggleCollapsibles();
+        }
+    };
+
+    /*
+     * When turtle stops running restore stop button to normal state
+     */
+    this.onStopTurtle = function () {
+        // TODO: plugin support
+        /*
+        if (stopTurtleContainer === null) {
+            return;
+        }
+
+        if (stopTurtleContainer.visible) {
+            _hideStopButton();
+            setPlaybackStatus();
+        }
+        */
+    };
+
+    /*
+     * When turtle starts running change stop button to running state
+     */
+    this.onRunTurtle = function () {
+        // TODO: plugin support
+        // If the stop button is hidden, show it.
+        /*
+        if (stopTurtleContainer === null) {
+            return;
+        }
+
+        if (!stopTurtleContainer.visible) {
+            _showStopButton();
+        }
+        */
+    };
+
+    /*
+     * Updates all canvas elements
+     */
+    function refreshCanvas() {
+        update = true;
+    };
+
+    /*
+     * This set makes it so the stage only re-renders when an
+     * event handler indicates a change has happened.
+     */
+    this.__tick = function (event) {
+
+        if (update || createjs.Tween.hasActiveTweens()) {
+            update = false; // Only update once
+            stage.update(event);
+        }
+    };
+
+    /*
+     * Opens samples on planet after closing all sub menus
+     */
+    _doOpenSamples = function () {
+        toolbar.closeAuxToolbar(_showHideAuxMenu);
+        planet.openPlanet();
+    };
+
+    /*
+     * Saves project
+     * If beginner, assigns default "My Project" title to html file
+     * If advanced, assigns custom title to html file
+     */
+    this.doSave = function () {
+        toolbar.closeAuxToolbar(_showHideAuxMenu);
+        if (beginnerMode) {
+            save.saveHTML(_('My Project'));
+        }
+    };
+
+    /*
+     * Uploads MB file to Planet
+     */
+    doUploadToPlanet = function () {
+        planet.openPlanet();
+    };
+
+    // function doShareOnFacebook() {
+    //     alert('Facebook Sharing : disabled'); // remove when add fb share link
+    //     // add code for facebook share link
+    // };
+
+    /*
+     * @param merge {if specified the selected file's blocks merge into current project}
+     *  Loads/merges existing MB file
+     */
+    doLoad = function (merge) {
+        console.log('DO LOAD ' + merge);
+        toolbar.closeAuxToolbar(_showHideAuxMenu);
+        if (merge === undefined) {
+            merge = false;
+        }
+
+        if (merge) {
+            console.log('MERGE LOAD');
+            merging = true;
+        } else {
+            console.log('LOAD NEW');
+            merging = false;
+        }
+
+        console.log('Loading .tb file');
+        document.querySelector('#myOpenFile').focus();
+        document.querySelector('#myOpenFile').click();
+        window.scroll(0, 0);
+        that.doHardStopButton();
+        _allClear();
+    };
+
+    window.prepareExport = prepareExport;
+
+    /*
+     * @param env {specifies environment}
+     * Runs music blocks project
+     */
+    this.runProject = function (env) {
+        console.log('Running Project from Event');
+        document.removeEventListener('finishedLoading', this.runProject);
+        setTimeout(function () {
+            console.log('Run');
+            _changeBlockVisibility();
+            that._doFastButton(env);
+        }, 5000);
+    }
+
+    /*
+     * @param  projectID {Planet project ID}
+     * @param  flags     {parameteres}
+     * @param  env       {specifies environment}
+     *
+     * Loads MB project from Planet
+     */
+    this.loadProject = function (projectID, flags, env) {
+        console.log('LOAD PROJECT');
+        //set default value of run
+        flags = typeof flags !== 'undefined' ? flags : {
+            run: false,
+            show: false,
+            collapse: false
+        };
+        loading = true;
+        document.body.style.cursor = 'wait';
+
+        // palettes.updatePalettes();
+        setTimeout(function () {
+            try {
+                planet.openProjectFromPlanet(projectID, function () {
+                    that.loadStartWrapper(that._loadStart);
+                });
+            } catch (e) {
+                console.log(e);
+                console.log('that._loadStart on error');
+                that.loadStartWrapper(that._loadStart);
+            }
+
+            planet.initialiseNewProject();
+            // Restore default cursor
+            loading = false;
+
+            document.body.style.cursor = 'default';
+            update = true;
+        }, 200);
+
+        var run = flags.run;
+        var show = flags.show;
+        var collapse = flags.collapse;
+
+        var __functionload = function () {
+            setTimeout(function () {
+                if (!collapse && firstRun) {
+                    _toggleCollapsibleStacks();
+                }
+
+                if (run && firstRun) {
+                    for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
+                        turtles.turtleList[turtle].doClear(true, true, false);
                     }
 
-                    if (data == undefined) {
-                        console.log('loadRawProject: data is undefined... punting');
-                        errorMsg('loadRawProject: project undefined');
-                        return;
+                    that.runProject(env);
+
+                    if (show) {
+                        _changeBlockVisibility();
                     }
 
-                    console.log('loadRawProject ' + data);
-                    loading = true;
-                    document.body.style.cursor = 'wait';
-                    _allClear();
+                    if (!collapse) {
+                        _toggleCollapsibleStacks();
+                    }
+                } else if (!show) {
+                    _changeBlockVisibility();
+                }
 
+                document.removeEventListener('finishedLoading', __functionload);
+                firstRun = false;
+            }, 1000);
+        }
+
+        if (document.addEventListener) {
+            document.addEventListener('finishedLoading', __functionload, false);
+        } else {
+            document.attachEvent('finishedLoading', __functionload);
+        }
+    };
+
+    /*
+     * Calculate time such that no matter how long it takes to
+     * load the program, the loading animation will cycle at least
+     * once.
+     *
+     * @param loadProject all params are from load project function
+     */
+    this.loadStartWrapper = function (func, arg1, arg2, arg3) {
+        var time1 = new Date();
+        func(arg1, arg2, arg3);
+
+        var time2 = new Date();
+        var elapsedTime = time2.getTime() - time1.getTime();
+        var timeLeft = Math.max(6000 - elapsedTime);
+        setTimeout(that.showContents, timeLeft);
+    };
+
+    /*
+     * Hides the loading animation and unhides the background.
+     * Shows contents of MB after loading screen.
+     */
+    this.showContents = function () {
+        docById('loading-image-container').style.display = 'none';
+        // docById('canvas').style.display = 'none';
+        docById('hideContents').style.display = 'block';
+
+        /*
+        // Warn the user -- chrome only -- if the browser level is
+        // not set to 100%
+        if (window.innerWidth !== window.outerWidth) {
+            blocks.errorMsg(_('Please set browser zoom level to 100%'));
+            console.log('zoom level is not 100%: ' + window.innerWidth + ' !== ' + window.outerWidth);
+        }
+        */
+    };
+
+    this._loadStart = function () {
+        console.log('LOAD START');
+
+        // where to put this?
+        // palettes.updatePalettes();
+        justLoadStart = function () {
+            console.log('Loading start and a matrix');
+            logo.playbackQueue = {};
+            blocks.loadNewBlocks(DATAOBJS);
+            setPlaybackStatus();
+        };
+
+        sessionData = null;
+
+        // Try restarting where we were when we hit save.
+        if (planet) {
+            sessionData = planet.openCurrentProject();
+        } else {
+            var currentProject = storage.currentProject;
+            sessionData = storage['SESSION' + currentProject];
+        }
+
+        var __afterLoad = function () {
+            if (!turtles.running()) {
+                setTimeout(function () {
+                    console.log('reset turtles ' + turtles.turtleList.length);
+
+                    for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
+                        logo.turtleHeaps[turtle] = [];
+                        logo.notationStaging[turtle] = [];
+                        logo.notationDrumStaging[turtle] = [];
+                        turtles.turtleList[turtle].doClear(true, true, false);
+                    }
+
+                    // playbackOnLoad();
+                }, 1000);
+            }
+
+            document.removeEventListener('finishedLoading', __afterLoad);
+        };
+
+        // After we have finished loading the project, clear all
+        // to ensure a clean start.
+        if (document.addEventListener) {
+            document.addEventListener('finishedLoading', __afterLoad);
+        } else {
+            document.attachEvent('finishedLoading', __afterLoad);
+        }
+
+        if (sessionData) {
+            try {
+                if (sessionData === 'undefined' || sessionData === '[]') {
+                    console.log('empty session found: loading start');
+                    justLoadStart();
+                } else {
+                    console.log('restoring session: ' + sessionData);
                     // First, hide the palettes as they will need updating.
                     for (var name in blocks.palettes.dict) {
                         blocks.palettes.dict[name].hideMenu(true);
                     }
 
-                    var __afterLoad = function () {
-                        playbackOnLoad();
-                        document.removeEventListener('finishedLoading', __afterLoad);
-                    };
-
-                    if (document.addEventListener) {
-                        document.addEventListener('finishedLoading', __afterLoad);
-                    } else {
-                        document.attachEvent('finishedLoading', __afterLoad);
-                    }
-
-                    try {
-                        var obj = JSON.parse(data);
-                        logo.playbackQueue = {};
-                        blocks.loadNewBlocks(obj);
-                        setPlaybackStatus();
-
-
-                    } catch (e) {
-                        console.log('loadRawProject: could not parse project data');
-                        errorMsg(e);
-                    }
-
-                    loading = false;
-                    document.body.style.cursor = 'default';
-                };
-
-                this.loadProjectFromFile = function() {
-                    console.log('OPEN');
-                    document.querySelector('#myOpenFile').focus();
-                    document.querySelector('#myOpenFile').click();
-                    window.scroll(0, 0);
-                };
-
-                this.newProject = function() {
-                    this.closePlanet();
-                    this.initialiseNewProject();
-                };
-
-                this.initialiseNewProject = function(name) {
-                    this.planet.ProjectStorage.initialiseNewProject(name);
-                    blocks.trashStacks = [];
-                    this.saveLocally();
-                };
-
-                this.saveLocally = function() {
-                    console.log('overwriting session data');
-                    var data = prepareExport();
-                    var svgData = doSVG(canvas, logo, turtles, 320, 240, 320 / canvas.width);
-                    if (svgData === null || svgData === '') {
-                        this.planet.ProjectStorage.saveLocally(data, null);
-                    } else {
-                        var img = new Image();
-                        var t = this;
-                        img.onload = function () {
-                            var bitmap = new createjs.Bitmap(img);
-                            var bounds = bitmap.getBounds();
-                            bitmap.cache(bounds.x, bounds.y, bounds.width, bounds.height);
-                            try {
-                                t.planet.ProjectStorage.saveLocally(data, bitmap.bitmapCache.getCacheDataURL());
-                            } catch (e) {
-                                console.log(e);
-                            }
-                        };
-                        img.src = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svgData)));
-                    }
-                    //if (sugarizerCompatibility.isInsideSugarizer()) {
-                    //    sugarizerCompatibility.saveLocally();
-                    //}
-                };
-
-                this.openCurrentProject = function() {
-                    return this.planet.ProjectStorage.getCurrentProjectData();
-                };
-
-                this.openProjectFromPlanet = function(id,error) {
-                    this.planet.openProjectFromPlanet(id,error);
-                };
-
-                this.onConverterLoad = function() {
-                    window.Converter = this.planet.Converter;
-                };
-
-                this.getCurrentProjectName = function() {
-                    return this.planet.ProjectStorage.getCurrentProjectName();
-                };
-
-                this.getCurrentProjectDescription = function() {
-                    return this.planet.ProjectStorage.getCurrentProjectDescription();
-                };
-
-                this.getCurrentProjectImage = function() {
-                    return this.planet.ProjectStorage.getCurrentProjectImage();
-                };
-
-                this.getTimeLastSaved = function() {
-                    return this.planet.ProjectStorage.TimeLastSaved;
-                };
-
-                this.init = function() {
-                    this.iframe = document.getElementById('planet-iframe');
-                    try {
-                        this.iframe.contentWindow.makePlanet(_THIS_IS_MUSIC_BLOCKS_, storage);
-                        this.planet = this.iframe.contentWindow.p;
-                        this.planet.setLoadProjectFromData(this.loadProjectFromData.bind(this));
-                        this.planet.setPlanetClose(this.closePlanet.bind(this));
-                        this.planet.setLoadNewProject(this.newProject.bind(this));
-                        this.planet.setLoadProjectFromFile(this.loadProjectFromFile.bind(this));
-                        this.planet.setOnConverterLoad(this.onConverterLoad.bind(this));
-                    } catch (e) {
-                        console.log('Planet not available');
-                        this.planet = null;
-                    }
-
-                    window.Converter = this.planet.Converter;
-                    this.mainCanvas = canvas;
-                };
-            };
-
-            try {
-                planet = new PlanetInterface(storage);
-                planet.init();
+                    logo.playbackQueue = {};
+                    blocks.loadNewBlocks(JSON.parse(sessionData));
+                    setPlaybackStatus();
+                }
             } catch (e) {
-                planet = undefined;
+                console.log(e);
+            }
+        } else {
+            justLoadStart();
+        }
+
+        update = true;
+    };
+
+
+    /*
+     * Hides all message containers
+     */
+    hideMsgs = function () {
+        errorMsgText.parent.visible = false;
+        if (errorMsgArrow != null) {
+            errorMsgArrow.removeAllChildren();
+            refreshCanvas();
+        }
+
+        msgText.parent.visible = false;
+        for (var i in errorArtwork) {
+            errorArtwork[i].visible = false;
+        }
+
+        refreshCanvas();
+    };
+
+
+    textMsg = function (msg) {
+        if (msgText == null) {
+            // The container may not be ready yet, so do nothing.
+            return;
+        }
+
+        var msgContainer = msgText.parent;
+        msgContainer.visible = true;
+        msgText.text = msg;
+        msgContainer.updateCache();
+        stage.setChildIndex(msgContainer, stage.children.length - 1);
+        refreshCanvas();
+    };
+
+    errorMsg = function (msg, blk, text, timeout) {
+        /*
+        if (logo.optimize) {
+            return;
+        }
+        */
+        if (errorMsgTimeoutID != null) {
+            clearTimeout(errorMsgTimeoutID);
+        }
+
+        // Hide the button, as the program is going to be
+        // terminated.
+        _hideStopButton();
+
+        if (errorMsgText == null) {
+            // The container may not be ready yet, so do nothing.
+            return;
+        }
+
+        if (blk !== undefined && blk != null && !blocks.blockList[blk].collapsed) {
+            var fromX = (canvas.width - 1000) / 2;
+            var fromY = 128;
+            var toX = blocks.blockList[blk].container.x + blocksContainer.x;
+            var toY = blocks.blockList[blk].container.y + blocksContainer.y;
+
+            if (errorMsgArrow == null) {
+                errorMsgArrow = new createjs.Container();
+                stage.addChild(errorMsgArrow);
             }
 
-            save = new SaveInterface(planet);
-            save.setVariables([
-                ['logo', logo],
-                ['turtles', turtles],
-                ['storage', storage],
-                ['printBlockSVG', _printBlockSVG]
-            ]);
-            save.init();
+            var line = new createjs.Shape();
+            errorMsgArrow.addChild(line);
+            line.graphics.setStrokeStyle(4).beginStroke('#ff0031').moveTo(fromX, fromY).lineTo(toX, toY);
+            stage.setChildIndex(errorMsgArrow, stage.children.length - 1);
 
-            if (planet != undefined) {
-                saveLocally = planet.saveLocally.bind(planet);
+            var angle = Math.atan2(toX - fromX, fromY - toY) / Math.PI * 180;
+            var head = new createjs.Shape();
+            errorMsgArrow.addChild(head);
+            head.graphics.setStrokeStyle(4).beginStroke('#ff0031').moveTo(-10, 18).lineTo(0, 0).lineTo(10, 18);
+            head.x = toX;
+            head.y = toY;
+            head.rotation = angle;
+        }
+
+        switch (msg) {
+            case NOMICERRORMSG:
+                errorArtwork['nomicrophone'].visible = true;
+                stage.setChildIndex(errorArtwork['nomicrophone'], stage.children.length - 1);
+                break;
+            case NOSTRINGERRORMSG:
+                errorArtwork['notastring'].visible = true;
+                stage.setChildIndex(errorArtwork['notastring'], stage.children.length - 1);
+                break;
+            case EMPTYHEAPERRORMSG:
+                errorArtwork['emptyheap'].visible = true;
+                stage.setChildIndex(errorArtwork['emptyheap'], stage.children.length - 1);
+                break;
+            case NOSQRTERRORMSG:
+                errorArtwork['negroot'].visible = true;
+                stage.setChildIndex(errorArtwork['negroot'], stage.children.length - 1);
+                break;
+            case NOACTIONERRORMSG:
+                if (text == null) {
+                    text = 'foo';
+                }
+
+                errorArtwork['nostack'].children[1].text = text;
+                errorArtwork['nostack'].visible = true;
+                errorArtwork['nostack'].updateCache();
+                stage.setChildIndex(errorArtwork['nostack'], stage.children.length - 1);
+                break;
+            case NOBOXERRORMSG:
+                if (text == null) {
+                    text = 'foo';
+                }
+
+                errorArtwork['emptybox'].children[1].text = text;
+                errorArtwork['emptybox'].visible = true;
+                errorArtwork['emptybox'].updateCache();
+                stage.setChildIndex(errorArtwork['emptybox'], stage.children.length - 1);
+                break;
+            case ZERODIVIDEERRORMSG:
+                errorArtwork['zerodivide'].visible = true;
+                stage.setChildIndex(errorArtwork['zerodivide'], stage.children.length - 1);
+                break;
+            case NANERRORMSG:
+                errorArtwork['notanumber'].visible = true;
+                stage.setChildIndex(errorArtwork['notanumber'], stage.children.length - 1);
+                break;
+            case NOINPUTERRORMSG:
+                errorArtwork['noinput'].visible = true;
+                stage.setChildIndex(errorArtwork['noinput'], stage.children.length - 1);
+                break;
+            default:
+                var errorMsgContainer = errorMsgText.parent;
+                errorMsgContainer.visible = true;
+                errorMsgText.text = msg;
+                stage.setChildIndex(errorMsgContainer, stage.children.length - 1);
+                errorMsgContainer.updateCache();
+                break;
+        }
+
+        if (timeout != undefined) {
+            var myTimeout = timeout;
+        } else {
+            var myTimeout = _ERRORMSGTIMEOUT_;
+        }
+
+        if (myTimeout > 0) {
+            errorMsgTimeoutID = setTimeout(function () {
+                hideMsgs();
+            }, myTimeout);
+        }
+
+        refreshCanvas();
+    };
+
+    /*
+     * Hides cartesian grid
+     */
+    _hideCartesian = function () {
+        cartesianBitmap.visible = false;
+        cartesianBitmap.updateCache();
+        update = true;
+    };
+
+    /*
+     * Shows cartesian grid
+     */
+    _showCartesian = function () {
+        cartesianBitmap.visible = true;
+        cartesianBitmap.updateCache();
+        update = true;
+    };
+
+    /*
+     * Hides polar grid
+     */
+    _hidePolar = function () {
+        polarBitmap.visible = false;
+        polarBitmap.updateCache();
+        update = true;
+    };
+
+    /*
+     * Shows polar grid
+     */
+    _showPolar = function () {
+        polarBitmap.visible = true;
+        polarBitmap.updateCache();
+        update = true;
+    };
+
+    // function pasteStack() {
+    //     closeSubMenus();
+    //     blocks.pasteStack();
+    // };
+
+    /*
+     * We don't save blocks in the trash, so we need to
+     * consolidate the block list and remap the connections.
+     *
+     * Next, save the playback queue, but don't save the
+     * playback queue if we are saving to Lilypond.
+     */
+    function prepareExport() {
+
+        var blockMap = [];
+        var hasMatrixDataBlock = false;
+        for (var blk = 0; blk < blocks.blockList.length; blk++) {
+            var myBlock = blocks.blockList[blk];
+            if (myBlock.trash) {
+                // Don't save blocks in the trash.
+                continue;
+            }
+
+            blockMap.push(blk);
+        }
+
+        var data = [];
+        for (var blk = 0; blk < blocks.blockList.length; blk++) {
+            var myBlock = blocks.blockList[blk];
+            if (myBlock.trash) {
+                // Don't save blocks in the trash.
+                continue;
+            }
+
+            if (myBlock.isValueBlock() || myBlock.name === 'loadFile' || myBlock.name === 'boolean') {
+                // FIX ME: scale image if it exceeds a maximum size.
+                var args = {
+                    'value': myBlock.value
+                };
             } else {
+                switch (myBlock.name) {
+                    case 'start':
+                    case 'drum':
+                        // Find the turtle associated with this block.
+                        var turtle = turtles.turtleList[myBlock.value];
+                        if (turtle == null) {
+                            var args = {
+                                'collapsed': false,
+                                'xcor': 0,
+                                'ycor': 0,
+                                'heading': 0,
+                                'color': 0,
+                                'shade': 50,
+                                'pensize': 5,
+                                'grey': 100
+                            };
+                        } else {
+                            var args = {
+                                'collapsed': myBlock.collapsed,
+                                'xcor': turtle.x,
+                                'ycor': turtle.y,
+                                'heading': turtle.orientation,
+                                'color': turtle.color,
+                                'shade': turtle.value,
+                                'pensize': turtle.stroke,
+                                'grey': turtle.chroma
+                            };
+                        }
+                        break;
+                    case 'temperament1':
+                        if (blocks.customTemperamentDefined) {
+                            // If temperament block is present
+                            var args = {
+                                'customTemperamentNotes': TEMPERAMENT['custom'],
+                                'startingPitch': logo.synth.startingPitch,
+                                'octaveSpace': OCTAVERATIO
+                            };
+                        }
+                        break;
+                    case 'interval':
+                    case 'newnote':
+                    case 'action':
+                    case 'matrix':
+                    case 'pitchdrummatrix':
+                    case 'rhythmruler':
+                    case 'timbre':
+                    case 'pitchstaircase':
+                    case 'tempo':
+                    case 'pitchslider':
+                    case 'musickeyboard':
+                    case 'modewidget':
+                    case 'status':
+                        var args = {
+                            'collapsed': myBlock.collapsed
+                        }
+                        break;
+                    case 'namedbox':
+                    case 'storein2':
+                    case 'nameddo':
+                    case 'nameddoArg':
+                    case 'namedcalc':
+                    case 'namedcalcArg':
+                    case 'namedarg':
+                        var args = {
+                            'value': myBlock.privateData
+                        }
+                        break;
+                    case 'nopValueBlock':
+                    case 'nopZeroArgBlock':
+                    case 'nopOneArgBlock':
+                    case 'nopTwoArgBlock':
+                    case 'nopThreeArgBlock':
+                        // restore original block name
+                        myBlock.name = myBlock.privateData;
+                        var args = {}
+                        break;
+                    case 'matrixData':
+                        // deprecated
+                        var args = {
+                            'notes': window.savedMatricesNotes,
+                            'count': window.savedMatricesCount
+                        }
+                        hasMatrixDataBlock = true;
+                        break;
+                    default:
+                        var args = {}
+                        break;
+                }
+            }
 
-                __saveLocally = function() {
-                    console.log('overwriting session data (local)');
-                    var data = prepareExport();
-                    var svgData = doSVG(canvas, logo, turtles, 320, 240, 320 / canvas.width);
+            connections = [];
+            for (var c = 0; c < myBlock.connections.length; c++) {
+                var mapConnection = blockMap.indexOf(myBlock.connections[c]);
+                if (myBlock.connections[c] == null || mapConnection === -1) {
+                    connections.push(null);
+                } else {
+                    connections.push(mapConnection);
+                }
+            }
 
-                    if (sugarizerCompatibility.isInsideSugarizer()) {
-                        //sugarizerCompatibility.data.blocks = prepareExport();
-                        storage = sugarizerCompatibility.data;
+            data.push([blockMap.indexOf(blk), [myBlock.name, args], myBlock.container.x, myBlock.container.y, connections]);
+        }
+
+        // remap block connections
+
+        if (logo.runningLilypond) {
+            logo.playbackQueue = {};
+        }
+
+        var i = data.length;
+        if (i > 0) {
+            for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
+                if (turtle in logo.playbackQueue) {
+                    for (var j = 0; j < logo.playbackQueue[turtle].length; j++) {
+                        data.push([i, turtle, logo.playbackQueue[turtle][j]]);
+                        i += 1;
+                    }
+                }
+            }
+        }
+
+        return JSON.stringify(data);
+    };
+
+    /*
+     * Opens plugin by clicking on the plugin open chooser in the DOM (.json).
+     */
+    doOpenPlugin = function () {
+        toolbar.closeAuxToolbar(_showHideAuxMenu);
+        pluginChooser.focus();
+        pluginChooser.click();
+    };
+
+    _hideStopButton = function () {
+        /*
+        if (stopTurtleContainer === null) {
+            return;
+        }
+
+        stopTurtleContainer.visible = false;
+        hardStopTurtleContainer.visible = true;
+        */
+    };
+
+    _showStopButton = function () {
+        /*
+        if (stopTurtleContainer === null) {
+            return;
+        }
+
+        stopTurtleContainer.visible = true;
+        hardStopTurtleContainer.visible = false;
+        */
+    };
+
+    // function blinkPasteButton(bitmap) {
+    //     function handleComplete() {
+    //         createjs.Tween.get(bitmap).to({
+    //             alpha: 1,
+    //             visible: true
+    //         }, 500);
+    //     };
+
+    //     createjs.Tween.get(bitmap).to({
+    //         alpha: 0,
+    //         visible: false
+    //     }, 1000).call(
+    //         handleComplete);
+    // };
+
+    /*
+     * Specifies that loading an MB project should merge it
+     * within the existing project
+     */
+    _doMergeLoad = function () {
+        doLoad(true);
+    };
+
+    /*
+     * Sets up palette buttons and functions
+     * e.g. Home, Collapse, Expand
+     * These menu items are on the canvas, not the toolbar.
+     */
+    _setupPaletteMenu = function (turtleBlocksScale) {
+        // Clean up if we've been here before.
+        if (homeButtonContainers.length !== 0) {
+            stage.removeChild(homeButtonContainers[0]);
+            stage.removeChild(homeButtonContainers[1]);
+            stage.removeChild(hideBlocksContainer[0]);
+            stage.removeChild(hideBlocksContainer[1]);
+            stage.removeChild(collapseBlocksContainer);
+            stage.removeChild(smallerContainer);
+            stage.removeChild(smallerOffContainer);
+            stage.removeChild(largerContainer);
+            stage.removeChild(largerOffContainer);
+        }
+
+        var btnSize = cellSize;
+        // Upper left
+        // var x = 27.5 + 6;
+        // var y = toolbarHeight + 95.5 + 6;
+        // Lower right
+        var x = this._innerWidth - 4 * btnSize - 27.5;
+        var y = this._innerHeight - 27.5;
+        var dx = btnSize;
+
+        homeButtonContainers = [];
+        homeButtonContainers.push(_makeButton(GOHOMEBUTTON, _('Home') + ' [' + _('Home').toUpperCase() + ']', x, y, btnSize, 0));
+        that._loadButtonDragHandler(homeButtonContainers[0], x, y, that._findBlocks, null, null, null, null);
+
+        homeButtonContainers.push(_makeButton(GOHOMEFADEDBUTTON, _('Home') + ' [' + _('Home').toUpperCase() + ']', x, y - btnSize, btnSize, 0));
+        that._loadButtonDragHandler(homeButtonContainers[1], x, y, that._findBlocks, null, null, null, null);
+        homeButtonContainers[1].visible = false;
+
+        homeButtonContainers[0].y = this._innerHeight - 27.5; // toolbarHeight + 95.5 + 6;
+        homeButtonContainers[1].y = this._innerHeight - 27.5; // toolbarHeight + 95.5 + 6;
+        boundary.hide();
+
+        x += dx;
+
+        hideBlocksContainer = [];
+        hideBlocksContainer.push(_makeButton(HIDEBLOCKSBUTTON, _('Show/hide block'), x, y, btnSize, 0));
+        that._loadButtonDragHandler(hideBlocksContainer[0], x, y, _changeBlockVisibility, null, null, null, null);
+        
+        hideBlocksContainer.push(_makeButton(HIDEBLOCKSFADEDBUTTON, _('Show/hide block'), x, y - btnSize, btnSize, 0));
+        that._loadButtonDragHandler(hideBlocksContainer[1], x, y, _changeBlockVisibility, null, null, null, null);
+        hideBlocksContainer[1].visible = false;
+
+        hideBlocksContainer[0].y = this._innerHeight - 27.5; // toolbarHeight + 95.5 + 6;
+        hideBlocksContainer[1].y = this._innerHeight - 27.5; // toolbarHeight + 95.5 + 6;
+
+        x += dx;
+
+        collapseBlocksContainer = _makeButton(COLLAPSEBLOCKSBUTTON, _('Expand/collapse blocks'), x, y, btnSize, 0);
+        that._loadButtonDragHandler(collapseBlocksContainer, x, y, _toggleCollapsibleStacks, null, null, null, null);
+
+        x += dx;
+
+        smallerContainer = _makeButton(SMALLERBUTTON, _('Decrease block size'), x, y, btnSize, 0);
+        that._loadButtonDragHandler(smallerContainer, x, y, doSmallerBlocks, null, null, null, null);
+
+        smallerOffContainer = _makeButton(SMALLERDISABLEBUTTON, _('Cannot be further decreased'), x, y, btnSize, 0);
+        smallerOffContainer.visible = false;
+
+        x += dx;
+
+        largerContainer = _makeButton(BIGGERBUTTON, _('Increase block size'), x, y, btnSize, 0);
+        that._loadButtonDragHandler(largerContainer, x, y, doLargerBlocks, null, null, null, null);
+
+        largerOffContainer = _makeButton(BIGGERDISABLEBUTTON, _('Cannot be further increased'), x, y, btnSize, 0);
+        largerOffContainer.visible = false;
+    };
+
+    // function doPopdownPalette() {
+    //     var p = new PopdownPalette(palettes);
+    //     p.popdown();
+    // };
+
+    /*
+     * Shows help page
+     */
+    _showHelp = function () {
+        var helpWidget = new HelpWidget();
+        helpWidget.init(null);
+    };
+
+    /*
+     * Shows about page
+     */
+    _showAboutPage = function () {
+        var helpWidget = new HelpWidget();
+        helpWidget.init(null);
+        helpWidget.showPageByName(_('About'));
+    };
+
+    /*
+     * REDUNDANT
+     */
+    _doMenuButton = function () {
+        _doMenuAnimation(true);
+    };
+
+    /*
+     * REDUNDANT
+     */
+    _doMenuAnimation = function (arg) {
+        if (arg === undefined) {
+            var animate = true;
+        } else {
+            var animate = arg;
+        }
+
+        if (animate) {
+            var timeout = 500;
+        } else {
+            var timeout = 50;
+        }
+
+        var bitmap = last(menuContainer.children);
+        if (bitmap != null) {
+            if (animate) {
+                var r = bitmap.rotation;
+                if (r % 95.5 !== 0) {
+                    return;
+                }
+
+                createjs.Tween.get(bitmap)
+                    .to({
+                        rotation: r
+                    })
+                    .to({
+                        rotation: r + 95.5
+                    }, 500);
+            } else {
+                bitmap.rotation += 95.5;
+            }
+        } else {
+            // Race conditions during load
+            setTimeout(_doMenuAnimation, 50);
+        }
+
+        setTimeout(function () {
+            if (menuButtonsVisible) {
+                menuButtonsVisible = false;
+            } else {
+                menuButtonsVisible = true;
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    if (beginnerMode) {
+                        advancedModeContainer.visible = false;
                     } else {
-                        storage = localStorage;
+                        beginnerModeContainer.visible = true;
+                        that.setScrollerButton()
+                    }
+                } else {
+                    that.setScrollerButton()
+                }
+            }
+            update = true;
+        }, timeout);
+    };
+
+    /*
+     * REDUNDANT
+     */
+    _toggleToolbar = function () {
+        buttonsVisible = !buttonsVisible;
+        menuContainer.visible = buttonsVisible;
+        headerContainer.visible = buttonsVisible;
+        for (var button in onscreenButtons) {
+            onscreenButtons[button].visible = buttonsVisible;
+        }
+
+        for (var button in onscreenMenu) {
+            onscreenMenu[button].visible = buttonsVisible;
+        }
+
+        if (buttonsVisible) {
+            if (_THIS_IS_MUSIC_BLOCKS_) {
+                if (beginnerMode) {
+                    advancedModeContainer.visible = false;
+                } else {
+                    beginnerModeContainer.visible = true;
+                    that.setScrollerButton()
+                }
+            } else {
+                that.setScrollerButton()
+            }
+        }
+
+        update = true;
+    };
+
+    /*
+     * Makes non-toolbar buttons, e.g., the palette menu buttons
+     */
+    _makeButton = function (name, label, x, y, size, rotation, parent) {
+        var container = new createjs.Container();
+
+        if (parent == undefined) {
+            stage.addChild(container);
+        } else {
+            parent.addChild(container);
+        }
+
+        container.x = x;
+        container.y = y;
+
+        var text = new createjs.Text(label, '14px Sans', '#282828');
+        if (container.x < 55) {
+            text.textAlign = 'left';
+            text.x = -14;
+        } else if (container.x > 255) {
+            text.textAlign = 'right';
+            text.x = 14;
+        } else {
+            text.textAlign = 'center';
+            text.x = 0;
+        }
+
+        if (y > 255) {
+            text.y = -60;
+        } else {
+            text.y = 30;
+        }
+
+        text.visible = false;
+
+        var circles;
+        container.on('mouseover', function (event) {
+            for (var c = 0; c < container.children.length; c++) {
+                if (container.children[c].text != undefined) {
+                    container.children[c].visible = true;
+                    // Do we need to add a background?
+                    // Should be image and text, hence === 2
+                    if ([2, 5, 8].indexOf(container.children.length) !== -1) {
+                        var b = container.children[c].getBounds();
+                        var bg = new createjs.Shape();
+                        if (container.children[c].textAlign === 'center') {
+                            bg.graphics.beginFill('#FFF').drawRoundRect(b.x - 8, container.children[c].y - 2, b.width + 16, b.height + 8, 10, 10, 10, 10);
+                        } else if (container.children[c].textAlign === 'left') {
+                            bg.graphics.beginFill('#FFF').drawRoundRect(b.x - 22, container.children[c].y - 2, b.width + 16, b.height + 8, 10, 10, 10, 10);
+                        } else {
+                            bg.graphics.beginFill('#FFF').drawRoundRect(b.x + 8, container.children[c].y - 2, b.width + 16, b.height + 8, 10, 10, 10, 10);
+                        }
+                        container.addChildAt(bg, 0);
                     }
 
-                    if (storage.currentProject === undefined) {
-                        try {
-                            storage.currentProject = 'My Project';
-                            storage.allProjects = JSON.stringify(['My Project'])
-                        } catch (e) {
-                            // Edge case, eg. Firefox localSorage DB corrupted
-                            console.log(e);
+                    container.children[0].visible = true;
+                    stage.update();
+                    break;
+                }
+            }
+
+            var r = size / 2;
+            circles = showButtonHighlight(container.x, container.y, r, event, palettes.scale, stage);
+        });
+
+        container.on('mouseout', function (event) {
+            hideButtonHighlight(circles, stage);
+            for (var c = 0; c < container.children.length; c++) {
+                if (container.children[c].text != undefined) {
+                    container.children[c].visible = false;
+                    container.children[0].visible = false;
+                    stage.update();
+                    break;
+                }
+            }
+        });
+
+        var img = new Image();
+
+        img.onload = function () {
+            var originalSize = 55; // this is the original svg size
+            var halfSize = Math.floor(size / 2);
+
+            var bitmap = new createjs.Bitmap(img);
+            if (size !== originalSize) {
+                bitmap.scaleX = size / originalSize;
+                bitmap.scaleY = size / originalSize;
+            }
+
+            bitmap.regX = halfSize / bitmap.scaleX;
+            bitmap.regY = halfSize / bitmap.scaleY;
+            if (rotation !== undefined) {
+                bitmap.rotation = rotation;
+            }
+
+            container.addChild(bitmap);
+            var hitArea = new createjs.Shape();
+            hitArea.graphics.beginFill('#FFF').drawEllipse(-halfSize, -halfSize, size, size);
+            hitArea.x = 0;
+            hitArea.y = 0;
+            container.hitArea = hitArea;
+            bitmap.cache(0, 0, size, size);
+            bitmap.updateCache();
+            update = true;
+        };
+
+        img.src = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(name)));
+        container.addChild(text);
+        return container;
+    };
+
+    /*
+     * @param container longAction
+     * @param ox extraLongAction,
+     * @param oy longImg,
+     * @param hoverAction extraLongImg
+     *
+     * Handles button dragging, long hovering and prevents multiple button presses
+     */
+    this._loadButtonDragHandler = function (container, ox, oy, action, hoverAction) {
+        // Prevent multiple button presses (i.e., debounce).
+        var lockTimer = null;
+        var locked = false;
+
+        /*
+        if (longAction === null) {
+            longAction = action;
+        }
+
+        if (extraLongAction === null) {
+            extraLongAction = longAction;
+        }
+
+        // Long and extra-long press variables declaration
+        var pressTimer = null;
+        var isLong = false;
+        var pressTimerExtra = null;
+        var isExtraLong = false;
+
+        var formerContainer = container;
+        */
+
+        // Long hover variables
+        var hoverTimer = null;
+        var isLongHover = false;
+
+        container.on('mouseover', function (event) {
+            if (!loading) {
+                document.body.style.cursor = 'pointer';
+            }
+
+            if (hoverAction === null) {
+                return;
+            }
+
+            if (locked) {
+                return;
+            } else {
+                locked = true;
+                lockTimer = setTimeout(function () {
+                    locked = false;
+
+                    clearTimeout(hoverTimer);
+                }, 2000);
+            }
+
+            hoverTimer = setTimeout(function () {
+                isLongHover = true;
+                console.log('HOVER ACTION');
+                hoverAction(false);
+            }, 1500);
+        });
+
+        container.on('mouseout', function (event) {
+            if (!loading) {
+                document.body.style.cursor = 'default';
+            }
+
+            if (hoverTimer !== null) {
+                clearTimeout(hoverTimer);
+            }
+        });
+
+        container.removeAllEventListeners('mousedown');
+        container.on('mousedown', function (event) {
+            /*
+            if (locked) {
+                return;
+            } else {
+                locked = true;
+
+                lockTimer = setTimeout(function () {
+                    locked = false;
+
+                    clearTimeout(pressTimer);
+                    clearTimeout(pressTimerExtra);
+                    if (longImg !== null || extraLongImg !== null) {
+                        container.visible = false;
+                        container = formerContainer;
+                        container.visible = true;
+                    }
+                }, 1500);
+            }
+
+            var mousedown = true;
+
+            pressTimer = setTimeout(function () {
+                isLong = true;
+                if (longImg !== null) {
+                    container.visible = false;
+                    container = _makeButton(longImg, '', ox, oy, cellSize, 0);
+                }
+            }, 500);
+
+            pressTimerExtra = setTimeout(function () {
+                isExtraLong = true;
+                if (extraLongImg !== null) {
+                    container.visible = false;
+                    container = _makeButton(extraLongImg, '', ox, oy, cellSize, 0);
+                }
+            }, 1000);
+            */
+            var circles = showButtonHighlight(ox, oy, cellSize / 2, event, turtleBlocksScale, stage);
+
+            function __pressupFunction(event) {
+                hideButtonHighlight(circles, stage);
+
+                /*
+                clearTimeout(lockTimer);
+
+                if (longImg !== null || extraLongImg !== null) {
+                    container.visible = false;
+                    container = formerContainer;
+                    container.visible = true;
+                }
+
+                locked = false;
+
+                if (action != null && mousedown && !locked) {
+                    clearTimeout(pressTimer);
+                    clearTimeout(pressTimerExtra);
+
+                    if (!isLong) {
+                        action();
+                    } else if (!isExtraLong) {
+                        longAction();
+                    } else {
+                        extraLongAction();
+                    }
+                }
+                */
+
+                action();
+                mousedown = false;
+            };
+
+            container.removeAllEventListeners('pressup');
+            var closure = container.on('pressup', __pressupFunction);
+
+            isLongHover = false;
+            // isLong = false;
+            // isExtraLong = false;
+        });
+    };
+
+    /*
+     * Handles pasted strings into input fields
+     */
+    pasted = function () {
+        var pasteinput = docById('paste').value;
+        var rawData = pasteinput;
+        if (rawData == null || rawData == '') {
+            return;
+        }
+
+        var cleanData = rawData.replace('\n', ' ');
+        try {
+            var obj = JSON.parse(cleanData);
+        } catch (e) {
+            errorMsg(_('Could not parse JSON input.'));
+            return;
+        }
+
+        for (var name in blocks.palettes.dict) {
+            blocks.palettes.dict[name].hideMenu(true);
+        }
+
+        refreshCanvas();
+
+        blocks.loadNewBlocks(obj);
+        pasteBox.hide();
+    };
+
+    /*
+     *
+     * @param dy how much of a change in y
+     *
+     * Handles changes in y coordinates of elements when
+     * aux toolbar is opened.
+     * Repositions elements on screen by a certain amount (dy)
+     */
+    deltaY = function (dy) {
+        toolbarHeight += dy;
+        for (var i = 0; i < onscreenButtons.length; i++) {
+            onscreenButtons[i].y += dy;
+        }
+
+        // logoContainer.y += dy;
+        homeButtonContainers[0].y = this._innerHeight - 27.5; // toolbarHeight + 95.5 + 6;
+        homeButtonContainers[1].y = homeButtonContainers[0].y;
+        hideBlocksContainer.y = homeButtonContainers[0].y;
+        collapseBlocksContainer.y = homeButtonContainers[0].y;
+        smallerContainer.y = homeButtonContainers[0].y;
+        largerContainer.y = homeButtonContainers[0].y;
+
+        for (var i = 0; i < onscreenMenu.length; i++) {
+            onscreenMenu[i].y += dy;
+        }
+
+        palettes.deltaY(dy);
+        turtles.deltaY(dy);
+
+        // menuContainer.y += dy;
+        blocksContainer.y += dy;
+        /*
+        var language = localStorage.languagePreference;
+        if (!beginnerMode || language !== 'ja') {
+            slowContainer.y += dy;
+            stepContainer.y += dy;
+        }
+        */
+        refreshCanvas();
+    };
+
+    /*
+     * Open aux menu
+     */
+    _openAuxMenu = function () {
+        if (!turtles.running() && toolbarHeight === 0) {
+            _showHideAuxMenu(false);
+        }
+    };
+
+    /*
+     * Toggles Aux menu visibility and positioning
+     */
+    _showHideAuxMenu = function (resize) {
+        var cellsize = 55;
+        if (!resize && toolbarHeight === 0) {
+            dy = cellsize + LEADING + 5;
+            toolbarHeight = dy;
+
+            // These buttons are smaller, hence + 6
+            homeButtonContainers[0].y = this._innerHeight - 27.5; // toolbarHeight + 95.5 + 6;
+            homeButtonContainers[1].y = homeButtonContainers[0].y;
+            hideBlocksContainer.y = homeButtonContainers[0].y;
+            collapseBlocksContainer.y = homeButtonContainers[0].y;
+            smallerContainer.y = homeButtonContainers[0].y;
+            largerContainer.y = homeButtonContainers[0].y;
+
+            palettes.deltaY(dy);
+            turtles.deltaY(dy);
+
+            blocksContainer.y += dy;
+            blocks.checkBounds();
+        } else {
+            var dy = toolbarHeight;
+            toolbarHeight = 0;
+
+            homeButtonContainers[0].y = this._innerHeight - 27.5; // toolbarHeight + 95.5 + 6;
+            homeButtonContainers[1].y = homeButtonContainers[0].y;
+            hideBlocksContainer.y = homeButtonContainers[0].y;
+            collapseBlocksContainer.y = homeButtonContainers[0].y;
+            smallerContainer.y = homeButtonContainers[0].y;
+            largerContainer.y = homeButtonContainers[0].y;
+
+            palettes.deltaY(-dy);
+            turtles.deltaY(-dy);
+
+            blocksContainer.y -= dy;
+        }
+
+        refreshCanvas();
+    };
+
+    /*
+     * Ran once dom is ready and editable
+     * Sets up dependencies and vars
+     */
+    this.domReady = function (doc) {
+        // _onResize = _onResize;
+        // var that = this;
+        // window.onblur = functionf () {
+        //     this.that.doHardStopButton(true);
+        // };
+        saveLocally = undefined;
+
+        // Do we need to update the stage?
+        update = true;
+
+        // Coordinate grid
+        cartesianBitmap = null;
+
+        // Polar grid
+        polarBitmap = null;
+
+        // Msg block
+        msgText = null;
+
+        // ErrorMsg block
+        errorMsgText = null;
+        errorMsgArrow = null;
+        errorMsgTimeoutID = null;
+        errorArtwork = {};
+        ERRORARTWORK = ['emptybox', 'emptyheap', 'negroot', 'noinput', 'zerodivide', 'notanumber', 'nostack', 'notastring', 'nomicrophone'];
+
+        // Get things started
+        this.init();
+    };
+
+    /*
+     * Inits everything. The main function.
+     */
+    this.init = function () {
+        console.log('document.body.clientWidth and clientHeight: ' + document.body.clientWidth + ' ' + document.body.clientHeight);
+        this._clientWidth = document.body.clientWidth;
+        this._clientHeight = document.body.clientHeight;
+
+        this._innerWidth = window.innerWidth;
+        this._innerHeight = window.innerHeight;
+        this._outerWidth = window.outerWidth;
+        this._outerHeight = window.outerHeight;
+
+        console.log('window inner/outer width/height: ' + this._innerWidth + ', ' + this._innerHeight + ' ' + this._outerWidth + ', ' + this._outerHeight);
+
+        if (sugarizerCompatibility.isInsideSugarizer()) {
+            //sugarizerCompatibility.data.blocks = prepareExport();
+            storage = sugarizerCompatibility.data;
+        } else {
+            storage = localStorage;
+        }
+
+        docById('loader').className = 'loader';
+
+        stage = new createjs.Stage(canvas);
+        createjs.Touch.enable(stage);
+
+        createjs.Ticker.timingMode = createjs.Ticker.RAF_SYNCHED;
+        createjs.Ticker.framerate = 30;
+        // createjs.Ticker.addEventListener('tick', stage);
+        createjs.Ticker.addEventListener('tick', that.__tick);
+
+        _createMsgContainer('#ffffff', '#7a7a7a', function (text) {
+            msgText = text;
+        }, 130);
+
+        _createMsgContainer('#ffcbc4', '#ff0031', function (text) {
+            errorMsgText = text;
+        }, 130);
+
+        _createErrorContainers();
+
+        /* Z-Order (top to bottom):
+         *   menus
+         *   palettes
+         *   blocks
+         *   trash
+         *   turtles
+         *   logo (drawing)
+         */
+        palettesContainer = new createjs.Container();
+        blocksContainer = new createjs.Container();
+        trashContainer = new createjs.Container();
+        turtleContainer = new createjs.Container();
+        /*
+        console.log(turtleContainer);
+        turtleContainer.scaleX = 0.5;
+        turtleContainer.scaleY = 0.5;
+        turtleContainer.x = 100;
+        turtleContainer.y = 100;
+        */
+        stage.addChild(turtleContainer);
+        stage.addChild(trashContainer, blocksContainer, palettesContainer);
+        that._setupBlocksContainerEvents();
+
+        trashcan = new Trashcan();
+        trashcan
+            .setCanvas(canvas)
+            .setStage(trashContainer)
+            .setSize(cellSize)
+            .setRefreshCanvas(refreshCanvas)
+            .init();
+
+        // Put the boundary in the turtles container so it scrolls
+        // with the blocks.
+        turtles = new Turtles();
+        turtles
+            .setCanvas(canvas)
+            .setClear(_allClear)
+            .setHideMenu(hideAuxMenu)
+            .setMasterStage(stage)
+            .setStage(turtleContainer)
+            .setHideGrids(hideGrids)
+            .setDoGrid(_doCartesianPolar)
+            .setRefreshCanvas(refreshCanvas);
+
+        // Put the boundary in the blocks container so it scrolls
+        // with the blocks.
+
+        boundary = new Boundary();
+        boundary
+            .setStage(blocksContainer)
+            .init();
+
+        blocks = new Blocks();
+        blocks
+            .setCanvas(canvas)
+            .setStage(blocksContainer)
+            .setRefreshCanvas(refreshCanvas)
+            .setTrashcan(trashcan)
+            .setUpdateStage(stage.update)
+            .setGetStageScale(getStageScale)
+            .setTurtles(turtles)
+            .setSetPlaybackStatus(setPlaybackStatus)
+            .setErrorMsg(errorMsg)
+            .setHomeContainers(setHomeContainers, boundary);
+
+        turtles.setBlocks(blocks);
+
+        palettes = new Palettes();
+        palettes
+            .setCanvas(canvas)
+            .setStage(palettesContainer)
+            .setRefreshCanvas(refreshCanvas)
+            .setSize(cellSize)
+            .setTrashcan(trashcan)
+            .setSearch(showSearchWidget, hideSearchWidget)
+            .setBlocks(blocks)
+            .init();
+
+        initPalettes(palettes);
+
+        logo = new Logo();
+        logo
+            .setCanvas(canvas)
+            .setBlocks(blocks)
+            .setTurtles(turtles)
+            .setStage(turtleContainer)
+            .setRefreshCanvas(refreshCanvas)
+            .setTextMsg(textMsg)
+            .setErrorMsg(errorMsg)
+            .setHideMsgs(hideMsgs)
+            .setOnStopTurtle(that.onStopTurtle)
+            .setOnRunTurtle(that.onRunTurtle)
+            .setGetStageX(getStageX)
+            .setGetStageY(getStageY)
+            .setGetStageMouseDown(getStageMouseDown)
+            .setGetCurrentKeyCode(that.getCurrentKeyCode)
+            .setClearCurrentKeyCode(that.clearCurrentKeyCode)
+            // .setMeSpeak(meSpeak)
+            .setSetPlaybackStatus(setPlaybackStatus);
+
+        blocks.setLogo(logo);
+
+        pasteBox = new PasteBox();
+        pasteBox
+            .setCanvas(canvas)
+            .setStage(stage)
+            .setRefreshCanvas(refreshCanvas)
+            .setPaste(paste);
+
+        languageBox = new LanguageBox();
+        languageBox.setMessage(textMsg);
+
+        // show help on startup if first time uer
+        if (firstTimeUser) {
+            _showHelp();
+        }
+
+        playbackOnLoad = function () {
+            /*
+            if (_THIS_IS_TURTLE_BLOCKS_) {
+                // Play playback queue if there is one.
+                for (turtle in logo.playbackQueue) {
+                    if (logo.playbackQueue[turtle].length > 0) {
+                        setTimeout(function () {
+                            logo.playback(-1);
+                        }, 3000);
+                        break;
+                    }
+                }
+            }
+            */
+        };
+
+        function PlanetInterface(storage) {
+            this.planet = null;
+            this.iframe = null;
+            this.mainCanvas = null;
+
+            this.hideMusicBlocks = function () {
+                hideSearchWidget();
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    storage.setItem('isMatrixHidden', docById('ptmDiv').style.visibility);
+                    storage.setItem('isStaircaseHidden', docById('pscDiv').style.visibility);
+                    storage.setItem('isTimbreHidden', docById('timbreDiv').style.visibility);
+                    storage.setItem('isPitchDrumMatrixHidden', docById('pdmDiv').style.visibility);
+                    storage.setItem('isMusicKeyboardHidden', docById('mkbDiv').style.visibility);
+                    storage.setItem('isRhythmRulerHidden', docById('rulerDiv').style.visibility);
+                    storage.setItem('isModeWidgetHidden', docById('modeDiv').style.visibility);
+                    storage.setItem('isSliderHidden', docById('sliderDiv').style.visibility);
+                    storage.setItem('isTemperamentHidden', docById('temperamentDiv').style.visibility);
+                    storage.setItem('isTempoHidden', docById('tempoDiv').style.visibility);
+
+                    if (docById('ptmDiv').style.visibility !== 'hidden') {
+                        docById('ptmDiv').style.visibility = 'hidden';
+                        docById('ptmTableDiv').style.visibility = 'hidden';
+                        docById('ptmButtonsDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('pdmDiv').style.visibility !== 'hidden') {
+                        docById('pdmDiv').style.visibility = 'hidden';
+                        docById('pdmButtonsDiv').style.visibility = 'hidden';
+                        docById('pdmTableDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('mkbDiv').style.visibility !== 'hidden') {
+                        docById('mkbDiv').style.visibility = 'hidden';
+                        docById('mkbButtonsDiv').style.visibility = 'hidden';
+                        docById('mkbTableDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('rulerDiv').style.visibility !== 'hidden') {
+                        docById('rulerDiv').style.visibility = 'hidden';
+                        docById('rulerTableDiv').style.visibility = 'hidden';
+                        docById('rulerButtonsDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('pscDiv').style.visibility !== 'hidden') {
+                        docById('pscDiv').style.visibility = 'hidden';
+                        docById('pscTableDiv').style.visibility = 'hidden';
+                        docById('pscButtonsDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('timbreDiv').style.visibility !== 'hidden') {
+                        docById('timbreDiv').style.visibility = 'hidden';
+                        docById('timbreTableDiv').style.visibility = 'hidden';
+                        docById('timbreButtonsDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('temperamentDiv').style.visibility !== 'hidden') {
+                        docById('temperamentDiv').style.visibility = 'hidden';
+                        docById('temperamentTableDiv').style.visibility = 'hidden';
+                        docById('temperamentButtonsDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('statusDiv').style.visibility !== 'hidden') {
+                        docById('statusDiv').style.visibility = 'hidden';
+                        docById('statusButtonsDiv').style.visibility = 'hidden';
+                        docById('statusTableDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('sliderDiv').style.visibility !== 'hidden') {
+                        docById('sliderDiv').style.visibility = 'hidden';
+                        docById('sliderButtonsDiv').style.visibility = 'hidden';
+                        docById('sliderTableDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('modeDiv').style.visibility !== 'hidden') {
+                        docById('modeDiv').style.visibility = 'hidden';
+                        docById('modeButtonsDiv').style.visibility = 'hidden';
+                        docById('modeTableDiv').style.visibility = 'hidden';
+                    }
+
+                    if (docById('tempoDiv').style.visibility !== 'hidden') {
+                        if (logo.tempo != null) {
+                            logo.tempo.hide();
                         }
                     }
+                }
 
-                    try {
-                        var p = storage.currentProject;
-                        storage['SESSION' + p] = prepareExport();
-                    } catch (e) {
-                        console.log(e);
-                    }
+                storage.setItem('isStatusHidden', docById('statusDiv').style.visibility);
+                logo.doStopTurtle();
+                docById('helpElem').style.visibility = 'hidden';
+                document.querySelector('.canvasHolder').classList.add('hide');
+                document.querySelector('#canvas').style.display = 'none';
+                document.querySelector('#theme-color').content = '#8bc34a';
+                setTimeout(function () {
+                    // Time to release the mouse
+                    stage.enableDOMEvents(false);
+                }, 250);
+                window.scroll(0, 0);
+            }
 
+            this.showMusicBlocks = function () {
+                document.getElementById('toolbars').style.display = "block";
+
+                docById('statusDiv').style.visibility = storage.getItem('isStatusHidden');
+                docById('statusButtonsDiv').style.visibility = storage.getItem('isStatusHidden');
+                docById('statusTableDiv').style.visibility = storage.getItem('isStatusHidden');
+
+                if (_THIS_IS_MUSIC_BLOCKS_) {
+                    docById('ptmDiv').style.visibility = storage.getItem('isMatrixHidden');
+                    docById('ptmButtonsDiv').style.visibility = storage.getItem('isMatrixHidden');
+                    docById('ptmTableDiv').style.visibility = storage.getItem('isMatrixHidden');
+                    docById('pscDiv').style.visibility = storage.getItem('isStaircaseHidden');
+                    docById('pscButtonsDiv').style.visibility = storage.getItem('isStaircaseHidden');
+                    docById('pscTableDiv').style.visibility = storage.getItem('isStaircaseHidden');
+                    docById('timbreDiv').style.visibility = storage.getItem('isTimbreHidden');
+                    docById('timbreButtonsDiv').style.visibility = storage.getItem('isTimbreHidden');
+                    docById('timbreTableDiv').style.visibility = storage.getItem('isTimbreHidden');
+                    docById('temperamentDiv').style.visibility = storage.getItem('isTemperamentHidden');
+                    docById('temperamentButtonsDiv').style.visibility = storage.getItem('isTemperamentHidden');
+                    docById('temperamentTableDiv').style.visibility = storage.getItem('isTemperamentHidden');
+                    docById('sliderDiv').style.visibility = storage.getItem('isSliderHidden');
+                    docById('sliderButtonsDiv').style.visibility = storage.getItem('isSliderHidden');
+                    docById('sliderTableDiv').style.visibility = storage.getItem('isSliderHidden');
+                    docById('pdmDiv').style.visibility = storage.getItem('isPitchDrumMatrixHidden');
+                    docById('pdmButtonsDiv').style.visibility = storage.getItem('isPitchDrumMatrixHidden');
+                    docById('pdmTableDiv').style.visibility = storage.getItem('isPitchDrumMatrixHidden');
+                    docById('mkbDiv').style.visibility = storage.getItem('isMusicKeyboardHidden');
+                    docById('mkbButtonsDiv').style.visibility = storage.getItem('isMusicKeyboardHidden');
+                    docById('mkbTableDiv').style.visibility = storage.getItem('isMusicKeyboardHidden');
+                    docById('rulerDiv').style.visibility = storage.getItem('isRhythmRulerHidden');
+                    docById('rulerButtonsDiv').style.visibility = storage.getItem('isRhythmRulerHidden');
+                    docById('rulerTableDiv').style.visibility = storage.getItem('isRhythmRulerHidden');
+                    docById('modeDiv').style.visibility = storage.getItem('isModeWidgetHidden');
+                    docById('modeButtonsDiv').style.visibility = storage.getItem('isModeWidgetHidden');
+                    docById('modeTableDiv').style.visibility = storage.getItem('isModeWidgetHidden');
+                    // Don't reopen the tempo widget since we didn't just hide it, but also closed it.
+                    // docById('tempoDiv').style.visibility = localStorage.getItem('isTempoHidden');
+                    // docById('tempoButtonsDiv').style.visibility = localStorage.getItem('isTempoHidden');
+                }
+                document.querySelector('.canvasHolder').classList.remove('hide');
+                document.querySelector('#canvas').style.display = '';
+                document.querySelector('#theme-color').content = platformColor.header;
+                stage.enableDOMEvents(true);
+                window.scroll(0, 0);
+            };
+
+            this.showPlanet = function () {
+                this.planet.open(this.mainCanvas.toDataURL('image/png'));
+                this.iframe.style.display = 'block';
+                try {
+                    this.iframe.contentWindow.document.getElementById('local-tab').click();
+                } catch (e) {
+                    console.log(e);
+                }
+            };
+
+            this.hidePlanet = function () {
+                this.iframe.style.display = 'none';
+            };
+
+            this.openPlanet = function () {
+                console.log('SAVE LOCALLY');
+                this.saveLocally();
+                this.hideMusicBlocks();
+                this.showPlanet();
+            };
+
+            this.closePlanet = function () {
+                this.hidePlanet();
+                this.showMusicBlocks();
+            };
+
+            this.loadProjectFromData = function (data, merge) {
+                if (merge === undefined) {
+                    merge = false;
+                }
+
+                this.closePlanet();
+                if (!merge) {
+                    sendAllToTrash(false, true);
+                }
+
+                if (data == undefined) {
+                    console.log('loadRawProject: data is undefined... punting');
+                    errorMsg(_('project undefined'));
+                    return;
+                }
+
+                console.log('loadRawProject ' + data);
+                loading = true;
+                document.body.style.cursor = 'wait';
+                _allClear();
+
+                // First, hide the palettes as they will need updating.
+                for (var name in blocks.palettes.dict) {
+                    blocks.palettes.dict[name].hideMenu(true);
+                }
+
+                var __afterLoad = function () {
+                    // playbackOnLoad();
+                    document.removeEventListener('finishedLoading', __afterLoad);
+                };
+
+                if (document.addEventListener) {
+                    document.addEventListener('finishedLoading', __afterLoad);
+                } else {
+                    document.attachEvent('finishedLoading', __afterLoad);
+                }
+
+                try {
+                    var obj = JSON.parse(data);
+                    logo.playbackQueue = {};
+                    blocks.loadNewBlocks(obj);
+                    setPlaybackStatus();
+
+
+                } catch (e) {
+                    console.log('loadRawProject: could not parse project data');
+                    errorMsg(e);
+                }
+
+                loading = false;
+                document.body.style.cursor = 'default';
+            };
+
+            this.loadProjectFromFile = function () {
+                document.querySelector('#myOpenFile').focus();
+                document.querySelector('#myOpenFile').click();
+                window.scroll(0, 0);
+            };
+
+            this.newProject = function () {
+                console.log('NEW');
+                this.closePlanet();
+                this.initialiseNewProject();
+                that._loadStart();
+                this.saveLocally();
+            };
+
+            this.initialiseNewProject = function (name) {
+                this.planet.ProjectStorage.initialiseNewProject(name);
+                sendAllToTrash();
+                refreshCanvas();
+                blocks.trashStacks = [];
+            };
+
+            this.saveLocally = function () {
+                console.log('overwriting session data');
+                var data = prepareExport();
+                var svgData = doSVG(canvas, logo, turtles, 320, 240, 320 / canvas.width);
+                if (svgData === null || svgData === '') {
+                    this.planet.ProjectStorage.saveLocally(data, null);
+                } else {
                     var img = new Image();
-                    var svgData = doSVG(canvas, logo, turtles, 320, 240, 320 / canvas.width);
-
+                    var t = this;
                     img.onload = function () {
                         var bitmap = new createjs.Bitmap(img);
                         var bounds = bitmap.getBounds();
                         bitmap.cache(bounds.x, bounds.y, bounds.width, bounds.height);
                         try {
-                            storage['SESSIONIMAGE' + p] = bitmap.bitmapCache.getCacheDataURL();
+                            t.planet.ProjectStorage.saveLocally(data, bitmap.bitmapCache.getCacheDataURL());
                         } catch (e) {
                             console.log(e);
                         }
                     };
+                    img.src = 'data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(svgData)));
+                }
+                //if (sugarizerCompatibility.isInsideSugarizer()) {
+                //    sugarizerCompatibility.saveLocally();
+                //}
+            };
 
-                    img.src = 'data:image/svg+xml;base64,' +
-                        window.btoa(unescape(encodeURIComponent(svgData)));
-                    if (sugarizerCompatibility.isInsideSugarizer()) {
-                        sugarizerCompatibility.saveLocally();
+            this.openCurrentProject = function () {
+                return this.planet.ProjectStorage.getCurrentProjectData();
+            };
+
+            this.openProjectFromPlanet = function (id, error) {
+                this.planet.openProjectFromPlanet(id, error);
+            };
+
+            this.onConverterLoad = function () {
+                window.Converter = this.planet.Converter;
+            };
+
+            this.getCurrentProjectName = function () {
+                return this.planet.ProjectStorage.getCurrentProjectName();
+            };
+
+            this.getCurrentProjectDescription = function () {
+                return this.planet.ProjectStorage.getCurrentProjectDescription();
+            };
+
+            this.getCurrentProjectImage = function () {
+                return this.planet.ProjectStorage.getCurrentProjectImage();
+            };
+
+            this.getTimeLastSaved = function () {
+                return this.planet.ProjectStorage.TimeLastSaved;
+            };
+
+            this.init = function () {
+                this.iframe = document.getElementById('planet-iframe');
+                try {
+                    this.iframe.contentWindow.makePlanet(_THIS_IS_MUSIC_BLOCKS_, storage, window._);
+                    this.planet = this.iframe.contentWindow.p;
+                    this.planet.setLoadProjectFromData(this.loadProjectFromData.bind(this));
+                    this.planet.setPlanetClose(this.closePlanet.bind(this));
+                    this.planet.setLoadNewProject(this.newProject.bind(this));
+                    this.planet.setLoadProjectFromFile(this.loadProjectFromFile.bind(this));
+                    this.planet.setOnConverterLoad(this.onConverterLoad.bind(this));
+                } catch (e) {
+                    console.log('Planet not available');
+                    this.planet = null;
+                }
+
+                window.Converter = this.planet.Converter;
+                this.mainCanvas = canvas;
+            };
+        };
+
+        try {
+            planet = new PlanetInterface(storage);
+            planet.init();
+        } catch (e) {
+            planet = undefined;
+        }
+
+        save = new SaveInterface(planet);
+        save.setVariables([
+            ['logo', logo],
+            ['turtles', turtles],
+            ['storage', storage],
+            ['printBlockSVG', _printBlockSVG],
+            ['planet', planet]
+        ]);
+        save.init();
+
+        toolbar = new Toolbar();
+        toolbar.init(beginnerMode);
+
+        toolbar.renderLogoIcon(_showAboutPage);
+        toolbar.renderPlayIcon(that._doFastButton);
+        toolbar.renderStopIcon(that.doHardStopButton);
+        toolbar.renderNewProjectIcon(_afterDelete);
+        toolbar.renderLoadIcon(doLoad);
+        toolbar.renderSaveIcons(save.saveHTML.bind(save),  doSVG, save.saveSVG.bind(save), save.savePNG.bind(save), save.saveWAV.bind(save), save.saveLilypond.bind(save), save.saveAbc.bind(save), save.saveBlockArtwork.bind(save));
+        toolbar.renderPlanetIcon(planet, _doOpenSamples);
+        toolbar.renderMenuIcon(_showHideAuxMenu);
+        toolbar.renderHelpIcon(_showHelp);
+        toolbar.renderModeSelectIcon(doSwitchMode);
+        toolbar.renderRunSlowlyIcon(that._doSlowButton);
+        toolbar.renderRunStepIcon(_doStepButton);
+        toolbar.renderAdvancedIcons(doAnalytics, doOpenPlugin, deletePlugin,setScroller, that._setupBlocksContainerEvents);
+        // toolbar.renderEnableHorizScrollIcon(setScroller, that._setupBlocksContainerEvents);
+        //  NOTE: This icon is handled directly in activity.js before the definition of 'scrollOnContainer'
+        toolbar.renderMergeIcon(_doMergeLoad);
+        toolbar.renderRestoreIcon(_restoreTrash);
+        toolbar.renderLanguageSelectIcon(languageBox);
+
+        if (planet != undefined) {
+            saveLocally = planet.saveLocally.bind(planet);
+        } else {
+
+            __saveLocally = function () {
+                console.log('overwriting session data (local)');
+                var data = prepareExport();
+                var svgData = doSVG(canvas, logo, turtles, 320, 240, 320 / canvas.width);
+
+                if (sugarizerCompatibility.isInsideSugarizer()) {
+                    //sugarizerCompatibility.data.blocks = prepareExport();
+                    storage = sugarizerCompatibility.data;
+                } else {
+                    storage = localStorage;
+                }
+
+                if (storage.currentProject === undefined) {
+                    try {
+                        storage.currentProject = 'My Project';
+                        storage.allProjects = JSON.stringify(['My Project'])
+                    } catch (e) {
+                        // Edge case, eg. Firefox localSorage DB corrupted
+                        console.log(e);
                     }
                 }
 
-                saveLocally = __saveLocally;
-            }
-
-            window.saveLocally = saveLocally;
-            logo.setSaveLocally(saveLocally);
-
-            saveBox = new SaveBox();
-            if (planet) {
-                var planetItem = ['_doSavePlanet', doUploadToPlanet];
-            } else {
-                var planetItem = ['_doSavePlanet', null];
-            }
-
-            saveBox.setVariables([
-                ['_canvas', canvas],
-                ['_stage', stage],
-                ['_refreshCanvas', refreshCanvas],
-                ['_doSaveHTML', save.saveHTML.bind(save)],
-                ['_doSaveSVG', save.saveSVG.bind(save)],
-                ['_doSavePNG', save.savePNG.bind(save)],
-                ['_doSavePlanet', doUploadToPlanet],
-                ['_doSaveBlockArtwork', save.saveBlockArtwork.bind(save)]
-            ]);
-
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                saveBox.setVariables([
-                    ['_doSaveWAV', save.saveWAV.bind(save)],
-                    ['_doSaveAbc', save.saveAbc.bind(save)],
-                    ['_doSaveLilypond', save.saveLilypond.bind(save)]
-                ]);
-            } else {
-                saveBox.setVariables([
-                    ['_doShareOnFacebook', doShareOnFacebook]
-                ]);
-            }
-
-            var __clearFunction = function () {
-                sendAllToTrash(true, false);
-                if (planet !== undefined) {
-                    planet.initialiseNewProject.bind(planet);
+                try {
+                    var p = storage.currentProject;
+                    storage['SESSION' + p] = prepareExport();
+                } catch (e) {
+                    console.log(e);
                 }
-            };
 
-            clearBox = new ClearBox();
-            clearBox
-                .setCanvas(canvas)
-                .setStage(stage)
-                .setRefreshCanvas(refreshCanvas)
-                .setClear(__clearFunction);
+                var img = new Image();
+                var svgData = doSVG(canvas, logo, turtles, 320, 240, 320 / canvas.width);
 
-            // FIXME: Third arg indicates beginner mode
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                initBasicProtoBlocks(palettes, blocks, beginnerMode);
-            } else {
-                initBasicProtoBlocks(palettes, blocks);
+                img.onload = function () {
+                    var bitmap = new createjs.Bitmap(img);
+                    var bounds = bitmap.getBounds();
+                    bitmap.cache(bounds.x, bounds.y, bounds.width, bounds.height);
+                    try {
+                        storage['SESSIONIMAGE' + p] = bitmap.bitmapCache.getCacheDataURL();
+                    } catch (e) {
+                        console.log(e);
+                    }
+                };
+
+                img.src = 'data:image/svg+xml;base64,' +
+                    window.btoa(unescape(encodeURIComponent(svgData)));
+                if (sugarizerCompatibility.isInsideSugarizer()) {
+                    sugarizerCompatibility.saveLocally();
+                }
             }
 
-            // Load any macros saved in local storage.
-            macroData = storage.macros;
-            if (macroData != null) {
-                processMacroData(macroData, palettes, blocks, macroDict);
+            saveLocally = __saveLocally;
+        }
+
+        window.saveLocally = saveLocally;
+        logo.setSaveLocally(saveLocally);
+
+        var __clearFunction = function () {
+            sendAllToTrash(true, false);
+            if (planet !== undefined) {
+                planet.initialiseNewProject.bind(planet);
             }
+        };
 
-            // Blocks and palettes need access to the macros dictionary.
-            blocks.setMacroDictionary(macroDict);
-            palettes.setMacroDictionary(macroDict);
+        // FIXME: Third arg indicates beginner mode
+        if (_THIS_IS_MUSIC_BLOCKS_) {
+            initBasicProtoBlocks(palettes, blocks, beginnerMode);
+        } else {
+            initBasicProtoBlocks(palettes, blocks);
+        }
 
-            // Load any plugins saved in local storage.
-            pluginData = storage.plugins;
-            if (pluginData != null) {
-                var obj = processPluginData(pluginData, palettes, blocks, logo.evalFlowDict, logo.evalArgDict, logo.evalParameterDict, logo.evalSetterDict, logo.evalOnStartList, logo.evalOnStopList, palettes.pluginMacros);
-                updatePluginObj(obj);
-            }
+        // Load any macros saved in local storage.
+        macroData = storage.macros;
+        if (macroData != null) {
+            processMacroData(macroData, palettes, blocks, macroDict);
+        }
 
-            // Load custom mode saved in local storage.
-            var custommodeData = storage.custommode;
-            if (custommodeData != undefined) {
-                customMode = JSON.parse(custommodeData);
-                console.log('restoring custom mode: ' + customMode);
-            }
+        // Blocks and palettes need access to the macros dictionary.
+        blocks.setMacroDictionary(macroDict);
+        palettes.setMacroDictionary(macroDict);
 
-            fileChooser.addEventListener('click', function (event) {
-                this.value = null;
-            });
+        // Load any plugins saved in local storage.
+        pluginData = storage.plugins;
+        if (pluginData != null) {
+            var obj = processPluginData(pluginData, palettes, blocks, logo.evalFlowDict, logo.evalArgDict, logo.evalParameterDict, logo.evalSetterDict, logo.evalOnStartList, logo.evalOnStopList, palettes.pluginMacros);
+            updatePluginObj(obj);
+        }
 
-            fileChooser.addEventListener('change', function (event) {
-                // Read file here.
-                var reader = new FileReader();
+        // Load custom mode saved in local storage.
+        var custommodeData = storage.custommode;
+        if (custommodeData != undefined) {
+            customMode = JSON.parse(custommodeData);
+            console.log('restoring custom mode: ' + customMode);
+        }
 
-                reader.onload = (function (theFile) {
-                    loading = true;
-                    document.body.style.cursor = 'wait';
+        fileChooser.addEventListener('click', function (event) {
+            this.value = null;
+        });
 
-                    setTimeout(function () {
-                        var rawData = reader.result;
-                        if (rawData == null || rawData === '') {
-                            console.log('rawData is ' + rawData);
-                            errorMsg(_('Cannot load project from the file. Please check the file type.'));
-                        } else {
-                            var cleanData = rawData.replace('\n', ' ');
+        fileChooser.addEventListener('change', function (event) {
+            // Read file here.
+            var reader = new FileReader();
 
-                            try {
-                                if (cleanData.includes('html')) {
-                                    var obj = JSON.parse(cleanData.match('<div class="code">(.+?)<\/div>')[1]);
-                                } else {
-                                    var obj = JSON.parse(cleanData);
-                                }
-                                // First, hide the palettes as they will need updating.
-                                for (var name in blocks.palettes.dict) {
-                                    blocks.palettes.dict[name].hideMenu(true);
-                                }
+            reader.onload = (function (theFile) {
+                loading = true;
+                document.body.style.cursor = 'wait';
 
-                                stage.removeAllEventListeners('trashsignal');
+                setTimeout(function () {
+                    var rawData = reader.result;
+                    if (rawData == null || rawData === '') {
+                        console.log('rawData is ' + rawData);
+                        errorMsg(_('Cannot load project from the file. Please check the file type.'));
+                    } else {
+                        var cleanData = rawData.replace('\n', ' ');
 
-                                if (!merging) {
-                                    // Wait for the old blocks to be removed.
-                                    var __listener = function (event) {
-                                        logo.playbackQueue = {};
-                                        blocks.loadNewBlocks(obj);
-                                        setPlaybackStatus();
-                                        stage.removeAllEventListeners('trashsignal');
-                                    };
-
-                                    stage.addEventListener('trashsignal', __listener, false);
-                                    sendAllToTrash(false, false);
-                                    if (planet) {
-                                        planet.initialiseNewProject(fileChooser.files[0].name.substr(0, fileChooser.files[0].name.lastIndexOf('.')));
-                                    }
-                                } else {
-                                    merging = false;
-                                    logo.playbackQueue = {};
-                                    blocks.loadNewBlocks(obj);
-                                    setPlaybackStatus();
-                                }
-
-                                loading = false;
-                                refreshCanvas();
-                            } catch (e) {
-                                errorMsg(_('Cannot load project from the file. Please check the file type.'));
-                                console.log(e);
-                                document.body.style.cursor = 'default';
-                                loading = false;
+                        try {
+                            if (cleanData.includes('html')) {
+                                var obj = JSON.parse(cleanData.match('<div class="code">(.+?)<\/div>')[1]);
+                            } else {
+                                var obj = JSON.parse(cleanData);
                             }
-                        }
-                    }, 200);
-                });
+                            // First, hide the palettes as they will need updating.
+                            for (var name in blocks.palettes.dict) {
+                                blocks.palettes.dict[name].hideMenu(true);
+                            }
 
-                reader.readAsText(fileChooser.files[0]);
-            }, false);
+                            stage.removeAllEventListeners('trashsignal');
 
-            var __handleFileSelect = function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-
-                var files = event.dataTransfer.files;
-                var reader = new FileReader();
-
-                reader.onload = (function (theFile) {
-                    loading = true;
-                    document.body.style.cursor = 'wait';
-
-                    setTimeout(function () {
-                        var rawData = reader.result;
-                        if (rawData == null || rawData === '') {
-                            errorMsg(_('Cannot load project from the file. Please check the file type.'));
-                        } else {
-                            var cleanData = rawData.replace('\n', ' ');
-
-                            try {
-                                if (cleanData.includes('html')) {
-                                    dat = cleanData.match('<div class="code">(.+?)<\/div>');
-                                    var obj = JSON.parse(dat[1]);
-                                } else {
-                                    var obj = JSON.parse(cleanData);
-                                }
-                                for (var name in blocks.palettes.dict) {
-                                    blocks.palettes.dict[name].hideMenu(true);
-                                }
-
-                                stage.removeAllEventListeners('trashsignal');
-
-                                var __afterLoad = function () {
-                                    playbackOnLoad();
-                                    document.removeEventListener('finishedLoading', __afterLoad);
-                                };
-
+                            if (!merging) {
                                 // Wait for the old blocks to be removed.
                                 var __listener = function (event) {
                                     logo.playbackQueue = {};
                                     blocks.loadNewBlocks(obj);
                                     setPlaybackStatus();
                                     stage.removeAllEventListeners('trashsignal');
-
-                                    if (document.addEventListener) {
-                                        document.addEventListener('finishedLoading', __afterLoad);
-                                    } else {
-                                        document.attachEvent('finishedLoading', __afterLoad);
-                                    }
                                 };
 
                                 stage.addEventListener('trashsignal', __listener, false);
                                 sendAllToTrash(false, false);
-                                if (planet !== undefined) {
-                                    planet.initialiseNewProject(files[0].name.substr(0, files[0].name.lastIndexOf('.')));
+                                if (planet) {
+                                    planet.initialiseNewProject(fileChooser.files[0].name.substr(0, fileChooser.files[0].name.lastIndexOf('.')));
                                 }
-
-                                loading = false;
-                                refreshCanvas();
-                            } catch (e) {
-                                console.log(e);
-                                errorMsg(_('Cannot load project from the file. Please check the file type.'));
-                                document.body.style.cursor = 'default';
-                                loading = false;
+                            } else {
+                                merging = false;
+                                logo.playbackQueue = {};
+                                blocks.loadNewBlocks(obj);
+                                setPlaybackStatus();
                             }
+
+                            loading = false;
+                            refreshCanvas();
+                        } catch (e) {
+                            errorMsg(_('Cannot load project from the file. Please check the file type.'));
+                            console.log(e);
+                            document.body.style.cursor = 'default';
+                            loading = false;
                         }
-                    }, 200);
-                });
-
-                // Work-around in case the handler is called by the
-                // widget drag & drop code.
-                if (files[0] != undefined) {
-                    reader.readAsText(files[0]);
-                    window.scroll(0, 0)
-                }
-            };
-
-            var __handleDragOver = function (event) {
-                event.stopPropagation();
-                event.preventDefault();
-                event.dataTransfer.dropEffect = 'copy';
-            };
-
-            var dropZone = docById('canvasHolder');
-            dropZone.addEventListener('dragover', __handleDragOver, false);
-            dropZone.addEventListener('drop', __handleFileSelect, false);
-
-            allFilesChooser.addEventListener('click', function (event) {
-                this.value = null;
+                    }
+                }, 200);
             });
 
-            pluginChooser.addEventListener('click', function (event) {
-                window.scroll(0, 0);
-                this.value = null;
+            reader.readAsText(fileChooser.files[0]);
+        }, false);
+
+        var __handleFileSelect = function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            var files = event.dataTransfer.files;
+            var reader = new FileReader();
+
+            reader.onload = (function (theFile) {
+                loading = true;
+                document.body.style.cursor = 'wait';
+
+                setTimeout(function () {
+                    var rawData = reader.result;
+                    if (rawData == null || rawData === '') {
+                        errorMsg(_('Cannot load project from the file. Please check the file type.'));
+                    } else {
+                        var cleanData = rawData.replace('\n', ' ');
+
+                        try {
+                            if (cleanData.includes('html')) {
+                                dat = cleanData.match('<div class="code">(.+?)<\/div>');
+                                var obj = JSON.parse(dat[1]);
+                            } else {
+                                var obj = JSON.parse(cleanData);
+                            }
+                            for (var name in blocks.palettes.dict) {
+                                blocks.palettes.dict[name].hideMenu(true);
+                            }
+
+                            stage.removeAllEventListeners('trashsignal');
+
+                            var __afterLoad = function () {
+                                // playbackOnLoad();
+                                document.removeEventListener('finishedLoading', __afterLoad);
+                            };
+
+                            // Wait for the old blocks to be removed.
+                            var __listener = function (event) {
+                                logo.playbackQueue = {};
+                                blocks.loadNewBlocks(obj);
+                                setPlaybackStatus();
+                                stage.removeAllEventListeners('trashsignal');
+
+                                if (document.addEventListener) {
+                                    document.addEventListener('finishedLoading', __afterLoad);
+                                } else {
+                                    document.attachEvent('finishedLoading', __afterLoad);
+                                }
+                            };
+
+                            stage.addEventListener('trashsignal', __listener, false);
+                            sendAllToTrash(false, false);
+                            if (planet !== undefined) {
+                                planet.initialiseNewProject(files[0].name.substr(0, files[0].name.lastIndexOf('.')));
+                            }
+
+                            loading = false;
+                            refreshCanvas();
+                        } catch (e) {
+                            console.log(e);
+                            errorMsg(_('Cannot load project from the file. Please check the file type.'));
+                            document.body.style.cursor = 'default';
+                            loading = false;
+                        }
+                    }
+                }, 200);
             });
 
-            pluginChooser.addEventListener('change', function (event) {
-                window.scroll(0, 0);
+            // Work-around in case the handler is called by the
+            // widget drag & drop code.
+            if (files[0] != undefined) {
+                reader.readAsText(files[0]);
+                window.scroll(0, 0)
+            }
+        };
 
-                // Read file here.
-                var reader = new FileReader();
+        var __handleDragOver = function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'copy';
+        };
 
-                reader.onload = (function (theFile) {
-                    loading = true;
-                    document.body.style.cursor = 'wait';
+        var dropZone = docById('canvasHolder');
+        dropZone.addEventListener('dragover', __handleDragOver, false);
+        dropZone.addEventListener('drop', __handleFileSelect, false);
 
+        allFilesChooser.addEventListener('click', function (event) {
+            this.value = null;
+        });
+
+        pluginChooser.addEventListener('click', function (event) {
+            window.scroll(0, 0);
+            this.value = null;
+        });
+
+        pluginChooser.addEventListener('change', function (event) {
+            window.scroll(0, 0);
+
+            // Read file here.
+            var reader = new FileReader();
+
+            reader.onload = (function (theFile) {
+                loading = true;
+                document.body.style.cursor = 'wait';
+
+                setTimeout(function () {
+                    obj = processRawPluginData(reader.result, palettes, blocks, errorMsg, logo.evalFlowDict, logo.evalArgDict, logo.evalParameterDict, logo.evalSetterDict, logo.evalOnStartList, logo.evalOnStopList, palettes.pluginMacros);
+                    // Save plugins to local storage.
+                    if (obj != null) {
+                        var pluginObj = preparePluginExports(obj);
+                        // console.log(pluginObj);
+                        storage.plugins = pluginObj; // preparePluginExports(obj));
+                    }
+
+                    // Refresh the palettes.
                     setTimeout(function () {
-                        obj = processRawPluginData(reader.result, palettes, blocks, errorMsg, logo.evalFlowDict, logo.evalArgDict, logo.evalParameterDict, logo.evalSetterDict, logo.evalOnStartList, logo.evalOnStopList, palettes.pluginMacros);
-                        // Save plugins to local storage.
-                        if (obj != null) {
-                            var pluginObj = preparePluginExports(obj);
-                            // console.log(pluginObj);
-                            storage.plugins = pluginObj; // preparePluginExports(obj));
+                        if (palettes.visible) {
+                            palettes.hide();
                         }
 
-                        // Refresh the palettes.
-                        setTimeout(function () {
-                            if (palettes.visible) {
-                                palettes.hide();
-                            }
-                            palettes.show();
-                            palettes.bringToTop();
-                        }, 1000);
+                        palettes.bringToTop();
+                    }, 1000);
 
-                        document.body.style.cursor = 'default';
-                        loading = false;
-                    }, 200);
-                });
+                    document.body.style.cursor = 'default';
+                    loading = false;
+                }, 200);
+            });
 
-                reader.readAsText(pluginChooser.files[0]);
-            }, false);
+            reader.readAsText(pluginChooser.files[0]);
+        }, false);
 
-            // Workaround to chrome security issues
-            // createjs.LoadQueue(true, null, true);
+        // Workaround to chrome security issues
+        // createjs.LoadQueue(true, null, true);
 
-            // Enable touch interactions if supported on the current device.
-            createjs.Touch.enable(stage, false, true);
+        // Enable touch interactions if supported on the current device.
+        createjs.Touch.enable(stage, false, true);
 
-            // Keep tracking the mouse even when it leaves the canvas.
-            stage.mouseMoveOutside = true;
+        // Keep tracking the mouse even when it leaves the canvas.
+        stage.mouseMoveOutside = true;
 
-            // Enabled mouse over and mouse out events.
-            stage.enableMouseOver(10); // default is 20
+        // Enabled mouse over and mouse out events.
+        stage.enableMouseOver(10); // default is 20
 
-            cartesianBitmap = _createGrid('images/Cartesian.svg');
-            polarBitmap = _createGrid('images/polar.svg');
+        cartesianBitmap = _createGrid('data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(CARTESIAN))));
+        polarBitmap = _createGrid('data:image/svg+xml;base64,' + window.btoa(unescape(encodeURIComponent(POLAR))));
 
-            var URL = window.location.href;
-            var projectID = null;
-            var flags = {run: false, show: false, collapse: false};
+        var URL = window.location.href;
+        var projectID = null;
+        var flags = {
+            run: false,
+            show: false,
+            collapse: false
+        };
 
-            // Scale the canvas relative to the screen size.
-            _onResize();
+        // Scale the canvas relative to the screen size.
+        _onResize(true);
 
-            var urlParts;
-            var env = [];
+        var urlParts;
+        var env = [];
 
-            if (!sugarizerCompatibility.isInsideSugarizer() && URL.indexOf('?') > 0) {
-                var urlParts = URL.split('?');
-                if (urlParts[1].indexOf('&') > 0) {
-                    var newUrlParts = urlParts[1].split('&');
-                    for (var i = 0; i < newUrlParts.length; i++) {
-                        if (newUrlParts[i].indexOf('=') > 0) {
-                            var args = newUrlParts[i].split('=');
-                            switch (args[0].toLowerCase()) {
+        if (!sugarizerCompatibility.isInsideSugarizer() && URL.indexOf('?') > 0) {
+            var urlParts = URL.split('?');
+            if (urlParts[1].indexOf('&') > 0) {
+                var newUrlParts = urlParts[1].split('&');
+                for (var i = 0; i < newUrlParts.length; i++) {
+                    if (newUrlParts[i].indexOf('=') > 0) {
+                        var args = newUrlParts[i].split('=');
+                        switch (args[0].toLowerCase()) {
                             case 'file':
                                 console.log('Warning: old Music Blocks URLs will no longer work.');
                                 break;
                             case 'id':
                                 projectID = args[1];
+                                break;
                             case 'run':
                                 if (args[1].toLowerCase() === 'true')
                                     flags.run = true;
@@ -1959,2382 +4641,65 @@ define(MYDEFINES, function (compatibility) {
                                 var url = args[1];
                                 break;
                             default:
-                                errorMsg('Invalid parameters');
-                            }
+                                errorMsg(_('Invalid parameters'));
+                                break;
                         }
                     }
-                } else {
-                    if (urlParts[1].indexOf('=') > 0) {
-                        var args = urlParts[1].split('=');
-                    }
-
-                    //ID is the only arg that can stand alone
-                    if (args[0].toLowerCase() === 'id') {
-                        projectID = args[1];
-                    }
                 }
-            }
-
-            if (projectID != null) {
-                setTimeout(function () {
-                    console.log('loading ' + projectID);
-                    loadStartWrapper(loadProject, projectID, flags, env);
-                }, 2000);
             } else {
-                setTimeout(function () {
-                    console.log('load new Start block');
-                    loadStartWrapper(_loadStart);
-                }, 2000);
-            }
-
-            document.addEventListener('mousewheel', scrollEvent, false);
-            document.addEventListener('DOMMouseScroll', scrollEvent, false);
-
-            this.document.onkeydown = __keyPressed;
-            _hideStopButton();
-        };
-
-        function _setupBlocksContainerEvents() {
-            var moving = false;
-
-            var __wheelHandler = function (event) {
-                // vertical scroll
-                if (event.deltaY != 0 && event.axis === event.VERTICAL_AXIS) { 
-                    if (palettes.paletteVisible) {
-                        if (event.clientX > cellSize + MENUWIDTH) {
-                            blocksContainer.y -= event.deltaY;
-                        }    
-                    } else {
-                        if (event.clientX > cellSize) {
-                            blocksContainer.y -= event.deltaY;
-                        }
-                    }   
+                if (urlParts[1].indexOf('=') > 0) {
+                    var args = urlParts[1].split('=');
                 }
 
-                // horizontal scroll 
-                if (scrollBlockContainer) {
-                    if (event.deltaX != 0 && event.axis === event.HORIZONTAL_AXIS) { 
-                        if (palettes.paletteVisible) {
-                            if (event.clientX > cellSize + MENUWIDTH) {
-                                blocksContainer.x -= event.deltaX;
-                            }    
-                        } else {
-                            if (event.clientX > cellSize) {
-                                blocksContainer.x -= event.deltaX;
-                            }
-                        }   
-                    }
-                } else {
-                    event.preventDefault();
-                } 
-
-                refreshCanvas();
-            };
-
-            docById('myCanvas').addEventListener('wheel', __wheelHandler, false);
-
-            var __stageMouseUpHandler = function (event) {
-                stageMouseDown = false;
-                moving = false;
-            };
-
-            stage.on('stagemousedown', function (event) {
-                stageMouseDown = true;
-                if (stage.getObjectUnderPoint() !== null | turtles.running()) {
-                    stage.removeAllEventListeners('stagemouseup');
-                    stage.on('stagemouseup', __stageMouseUpHandler);
-                    return;
-                }
-
-                moving = true;
-                var lastCords = {
-                    x: event.stageX,
-                    y: event.stageY
-                };
-
-                hideDOMLabel();
-
-                stage.removeAllEventListeners('stagemousemove');
-                stage.on('stagemousemove', function (event) {
-                    if (!moving) {
-                        return;
-                    }
-
-                    if (scrollBlockContainer) {
-                        blocksContainer.x += event.stageX - lastCords.x;
-                    }
-
-                    blocksContainer.y += event.stageY - lastCords.y;
-                    lastCords = {
-                        x: event.stageX,
-                        y: event.stageY
-                    };
-
-                    refreshCanvas();
-                });
-
-                stage.removeAllEventListeners('stagemouseup');
-                stage.on('stagemouseup', __stageMouseUpHandler);
-            });
-        };
-
-        function scrollEvent(event) {
-            var data = event.wheelDelta || -event.detail;
-            var delta = Math.max(-1, Math.min(1, (data)));
-            var scrollSpeed = 30;
-
-            if (event.clientX < cellSize) {
-                palettes.menuScrollEvent(delta, scrollSpeed);
-                palettes.hidePaletteIconCircles();
-            } else {
-                palette = palettes.findPalette(event.clientX / turtleBlocksScale, event.clientY / turtleBlocksScale);
-                if (palette) {
-                    palette.scrollEvent(delta, scrollSpeed);
-                }
-            }
-        };
-
-        function getStageScale() {
-            return turtleBlocksScale;
-        };
-
-        function getStageX() {
-            return turtles.screenX2turtleX(stageX / turtleBlocksScale);
-        };
-
-        function getStageY() {
-            return turtles.screenY2turtleY(stageY / turtleBlocksScale);
-        };
-
-        function getStageMouseDown() {
-            return stageMouseDown;
-        };
-
-        function setCameraID(id) {
-            cameraID = id;
-        };
-
-        function _createGrid(imagePath) {
-            var img = new Image();
-            img.src = imagePath;
-            var container = new createjs.Container();
-            stage.addChild(container);
-
-            var bitmap = new createjs.Bitmap(img);
-            container.addChild(bitmap);
-            bitmap.cache(0, 0, 1200, 900);
-
-            bitmap.x = (canvas.width - 1200) / 2;
-            bitmap.y = (canvas.height - 900) / 2;
-            bitmap.scaleX = bitmap.scaleY = bitmap.scale = 1;
-            bitmap.visible = false;
-            bitmap.updateCache();
-
-            return bitmap;
-        };
-
-        function _createMsgContainer(fillColor, strokeColor, callback, y) {
-            var container = new createjs.Container();
-            stage.addChild(container);
-            container.x = (canvas.width - 1000) / 2;
-            container.y = y;
-            container.visible = false;
-
-            var img = new Image();
-            var svgData = MSGBLOCK.replace('fill_color', fillColor).replace(
-                'stroke_color', strokeColor);
-
-            img.onload = function () {
-                var msgBlock = new createjs.Bitmap(img);
-                container.addChild(msgBlock);
-                var text = new createjs.Text('your message here', '20px Arial', '#000000');
-                container.addChild(text);
-                text.textAlign = 'center';
-                text.textBaseline = 'alphabetic';
-                text.x = 500;
-                text.y = 30;
-
-                var bounds = container.getBounds();
-                container.cache(bounds.x, bounds.y, bounds.width, bounds.height);
-
-                var hitArea = new createjs.Shape();
-                hitArea.graphics.beginFill('#FFF').drawRect(0, 0, 1000, 42);
-                hitArea.x = 0;
-                hitArea.y = 0;
-                container.hitArea = hitArea;
-
-                container.on('click', function (event) {
-                    container.visible = false;
-                    // On the possibility that there was an error
-                    // arrow associated with this container
-                    if (errorMsgArrow != null) {
-                        errorMsgArrow.removeAllChildren(); // Hide the error arrow.
-                    }
-
-                    update = true;
-                });
-
-                callback(text);
-                blocks.setMsgText(text);
-            };
-
-            img.src = 'data:image/svg+xml;base64,' + window.btoa(
-                unescape(encodeURIComponent(svgData)));
-        };
-
-        function _createErrorContainers() {
-            // Some error messages have special artwork.
-            for (var i = 0; i < ERRORARTWORK.length; i++) {
-                var name = ERRORARTWORK[i];
-                _makeErrorArtwork(name);
-            }
-        };
-
-        function _makeErrorArtwork(name) {
-            var container = new createjs.Container();
-            stage.addChild(container);
-            container.x = (canvas.width - 1000) / 2;
-            container.y = 110;
-            errorArtwork[name] = container;
-            errorArtwork[name].name = name;
-            errorArtwork[name].visible = false;
-
-            var img = new Image();
-            img.onload = function () {
-                // console.log('creating error message artwork for ' + img.src);
-                var artwork = new createjs.Bitmap(img);
-                container.addChild(artwork);
-                var text = new createjs.Text('', '20px Sans', '#000000');
-                container.addChild(text);
-                text.x = 70;
-                text.y = 10;
-
-                var bounds = container.getBounds();
-                container.cache(bounds.x, bounds.y, bounds.width, bounds.height);
-
-                var hitArea = new createjs.Shape();
-                hitArea.graphics.beginFill('#FFF').drawRect(0, 0, bounds.width, bounds.height);
-                hitArea.x = 0;
-                hitArea.y = 0;
-                container.hitArea = hitArea;
-
-                container.on('click', function (event) {
-                    container.visible = false;
-                    // On the possibility that there was an error
-                    // arrow associated with this container
-                    if (errorMsgArrow != null) {
-                        errorMsgArrow.removeAllChildren(); // Hide the error arrow.
-                    }
-                    update = true;
-                });
-            };
-
-            img.src = 'images/' + name + '.svg';
-        };
-
-        // Prepare the search widget
-        searchWidget.style.visibility = 'hidden';
-        var searchBlockPosition = [100, 100];
-
-        var searchSuggestions = [];
-        var deprecatedBlockNames = [];
-
-        for (var i in blocks.protoBlockDict) {
-            var blockLabel = blocks.protoBlockDict[i].staticLabels[0];
-            if (blockLabel) {
-                if (blocks.protoBlockDict[i].hidden) {
-                    deprecatedBlockNames.push(blockLabel);
-                } else {
-                    searchSuggestions.push(blockLabel);
+                //ID is the only arg that can stand alone
+                if (args[0].toLowerCase() === 'id') {
+                    projectID = args[1];
                 }
             }
         }
 
-        searchSuggestions = searchSuggestions.reverse();
-
-        searchWidget.onclick = function() {
-            doSearch();
-        };
-
-        function hideSearchWidget() {
-            // Hide the jQuery search results widget
-            var obj = docByClass('ui-menu');
-            if (obj.length > 0) {
-                obj[0].style.visibility = 'hidden';
-            }
-
-            searchWidget.style.visibility = 'hidden';
-        };
-
-        function showSearchWidget() {
-            if (searchWidget.style.visibility === 'visible') {
-                hideSearchWidget();
-            } else {
-                var obj = docByClass('ui-menu');
-                if (obj.length > 0) {
-                    obj[0].style.visibility = 'visible';
-                }
-
-                searchWidget.value = null;
-                docById('searchResults').style.visibility = 'visible';
-                searchWidget.style.visibility = 'visible';
-                searchWidget.style.left = (utilityBox.getPos()[0] + 10) * turtleBlocksScale + 'px';
-                searchWidget.style.top = (utilityBox.getPos()[1] + 10) * turtleBlocksScale + 'px';
-
-                searchBlockPosition = [100, 100];
-
-                // Give the browser time to update before selecting
-                // focus.
-                setTimeout(function () {
-                    searchWidget.focus();
-                    doSearch();
-                }, 500);
-            }
-        };
-
-        function doSearch() {
-            var $j = jQuery.noConflict();
-
-            $j('#search').autocomplete({
-                source: searchSuggestions
-            });
-
-            $j('#search').autocomplete('widget').addClass('scrollSearch');
-
-            var searchInput = searchWidget.value;
-            var obj = palettes.getProtoNameAndPalette(searchInput);
-            var protoblk = obj[0];
-            var paletteName = obj[1];
-            var protoName = obj[2];
-
-            var searchResult = blocks.protoBlockDict.hasOwnProperty(protoName);
-
-            if (searchInput.length > 0) {
-                if (searchResult) {
-                    palettes.dict[paletteName].makeBlockFromSearch(protoblk, protoName, function (newBlock) {
-                        blocks.moveBlock(newBlock, searchBlockPosition[0] - blocksContainer.x, searchBlockPosition[1] - blocksContainer.y);
-                    });
-
-                    // Move the position of the next newly created block.
-                    searchBlockPosition[0] += STANDARDBLOCKHEIGHT;
-                    searchBlockPosition[1] += STANDARDBLOCKHEIGHT;
-                } else if (deprecatedBlockNames.indexOf(searchInput) > -1) {
-                    blocks.errorMsg(_('This block is deprecated.'));
-                } else {
-                    blocks.errorMsg(_('Block cannot be found.'));
-                }
-
-                searchWidget.value = '';
-                update = true;
-            }
-        };
-
-        function __makeNewNote(octave, solf) {
-            var newNote = [
-                [0, 'newnote', 300 - blocksContainer.x, 300 - blocksContainer.y, [null, 1, 4, 8]],
-                [1, 'divide', 0, 0, [0, 2, 3]],
-                [2, ['number', {'value': 1}], 0, 0, [1]],
-                [3, ['number', {'value': 4}], 0, 0, [1]],
-                [4, 'vspace', 0, 0, [0, 5]],
-                [5, 'pitch', 0, 0, [4, 6, 7, null]],
-                [6, ['solfege', {'value': solf}], 0, 0, [5]],
-                [7, ['number', {'value': octave}], 0, 0, [5]],
-                [8, 'hidden', 0, 0, [0, null]]
-            ];
-
-            blocks.loadNewBlocks(newNote);
-            if (blocks.activeBlock !== null) {
-                // Connect the newly created block to the active block
-                // (if it is a hidden block at the end of a new note
-                // block).
-                var bottom = blocks.findBottomBlock(blocks.activeBlock);
-                console.log(blocks.activeBlock + ' ' + bottom);
-                if (blocks.blockList[bottom].name === 'hidden' && blocks.blockList[blocks.blockList[bottom].connections[0]].name === 'newnote') {
-
-                    // The note block macro creates nine blocks.
-                    var newlyCreatedBlock = blocks.blockList.length - 9;
-
-                    // Set last connection of active block to the
-                    // newly created block.
-                    var lastConnection = blocks.blockList[bottom].connections.length - 1
-                    blocks.blockList[bottom].connections[lastConnection] = newlyCreatedBlock;
-
-                    // Set first connection of the newly created block to
-                    // the active block.
-                    blocks.blockList[newlyCreatedBlock].connections[0] = bottom;
-                    // Adjust the dock positions to realign the stack.
-                    blocks.adjustDocks(bottom, true);
-                }
-            }
-
-            // Set new hidden block at the end of the newly created
-            // note block to the active block.
-            blocks.activeBlock = blocks.blockList.length - 1;
+        if (projectID != null) {
+            setTimeout(function () {
+                console.log('loading ' + projectID);
+                that.loadStartWrapper(that.loadProject, projectID, flags, env);
+            }, 200); // 2000
+        } else {
+            setTimeout(function () {
+                console.log('load new Start block');
+                that.loadStartWrapper(that._loadStart);
+            }, 200); // 2000
         }
 
-        function __keyPressed(event) {
-            if (docById('labelDiv').classList.contains('hasKeyboard')) {
-                return;
-            }
-
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                if (docById('BPMInput').classList.contains('hasKeyboard')) {
-                    return;
-                }
-
-                if (docById('musicratio1').classList.contains('hasKeyboard')) {
-                    return;
-                }
-
-                if (docById('musicratio2').classList.contains('hasKeyboard')) {
-                    return;
-                }
-
-                if (docById('dissectNumber').classList.contains('hasKeyboard')) {
-                    return;
-                }
-
-                if (docById('timbreName') !== null) {
-                    if (docById('timbreName').classList.contains('hasKeyboard')) {
-                        return;
-                    }
-                }
-            }
-
-            const BACKSPACE = 8;
-            const TAB = 9;
-
-            /*
-            if (event.keyCode === TAB || event.keyCode === BACKSPACE) {
-                // Prevent browser from grabbing TAB key
-                event.preventDefault();
-            }
-            */
-
-            const ESC = 27;
-            const ALT = 18;
-            const CTRL = 17;
-            const SHIFT = 16;
-            const RETURN = 13;
-            const SPACE = 32;
-            const HOME = 36;
-            const END = 35;
-            const PAGE_UP = 33;
-            const PAGE_DOWN = 34;
-            const KEYCODE_LEFT = 37;
-            const KEYCODE_RIGHT = 39;
-            const KEYCODE_UP = 38;
-            const KEYCODE_DOWN = 40;
-            const DEL = 46;
-            const V = 86;
-
-            // Shortcuts for creating new notes
-            const KEYCODE_D = 68; // do
-            const KEYCODE_R = 82; // re
-            const KEYCODE_M = 77; // mi
-            const KEYCODE_F = 70; // fa
-            const KEYCODE_S = 83; // so
-            const KEYCODE_L = 76; // la
-            const KEYCODE_T = 84; // ti
-
-            // Check for RETURN in search widget ahead of other events.
-            if (event.keyCode === RETURN && docById('search').value.length > 0) {
-                doSearch();
-                palettes.hide();
-                palettes.show();
-            }
-
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                var disableKeys = docById('lilypondModal').style.display === 'block' || searchWidget.style.visibility === 'visible' || docById('planet-iframe').style.display === '' || docById('paste').style.visibility === 'visible' || docById('wheelDiv').style.display === '' || logo.turtles.running();
-            } else {
-                var disableKeys = searchWidget.style.visibility === 'visible' || docById('paste').style.visibility === 'visible' || logo.turtles.running();
-            }
-
-            var disableArrowKeys = _THIS_IS_MUSIC_BLOCKS_ && (docById('sliderDiv').style.visibility === 'visible' || docById('tempoDiv').style.visibility === 'visible');
-
-            if (event.altKey && !disableKeys) {
-                switch (event.keyCode) {
-                case 66: // 'B'
-                    save.saveBlockArtwork();
-                    break;
-                case 67: // 'C'
-                    blocks.prepareStackForCopy();
-                    break;
-                case 69: // 'E'
-                    _allClear();
-                    break;
-                case 80: // 'P'
-                    logo.playback(-1);
-                    break;
-                case 82: // 'R'
-                    _doFastButton();
-                    break;
-                case 83: // 'S'
-                    logo.doStopTurtle();
-                    break;
-                case 86: // 'V'
-                    blocks.pasteStack();
-                    break;
-                }
-            } else if (event.ctrlKey) {
-                switch (event.keyCode) {
-                case V:
-                    pasteBox.createBox(turtleBlocksScale, 200, 200);
-                    pasteBox.show();
-                    docById('paste').style.left = (pasteBox.getPos()[0] + 10) * turtleBlocksScale + 'px';
-                    docById('paste').style.top = (pasteBox.getPos()[1] + 10) * turtleBlocksScale + 'px';
-                    docById('paste').focus();
-                    docById('paste').style.visibility = 'visible';
-                    update = true;
-                    break;
-                }
-            } else if (event.shiftKey && !disableKeys) {
-                switch (event.keyCode) {
-                case KEYCODE_D:
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        __makeNewNote(5, 'do');
-                    }
-                    break;
-                case KEYCODE_R:
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        __makeNewNote(5, 're');
-                    }
-                    break;
-                case KEYCODE_M:
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        __makeNewNote(5, 'mi');
-                    }
-                    break;
-                case KEYCODE_F:
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        __makeNewNote(5, 'fa');
-                    }
-                    break;
-                case KEYCODE_S:
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        __makeNewNote(5, 'sol');
-                    }
-                    break;
-                case KEYCODE_L:
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        __makeNewNote(5, 'la');
-                    }
-                    break;
-                case KEYCODE_T:
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        __makeNewNote(5, 'ti');
-                    }
-                    break;
-                }
-            } else {
-                if (docById('paste').style.visibility === 'visible' && event.keyCode === RETURN) {
-                    if (docById('paste').value.length > 0) {
-                        pasted();
-                    }
-                } else if (!disableKeys) {
-                    switch (event.keyCode) {
-                    case END:
-                        blocksContainer.y = -blocks.bottomMostBlock() + logo.canvas.height / 2;
-                        break;
-                    case PAGE_UP:
-                        blocksContainer.y += logo.canvas.height / 2;
-                        stage.update();
-                        break;
-                    case PAGE_DOWN:
-                        blocksContainer.y -= logo.canvas.height / 2;
-                        stage.update();
-                        break;
-                    case DEL:
-                        blocks.extract();
-                        break;
-                    case KEYCODE_UP:
-                        if (disableArrowKeys) {
-                        } else if (blocks.activeBlock != null) {
-                            blocks.moveStackRelative(blocks.activeBlock, 0, -STANDARDBLOCKHEIGHT / 2);
-                            blocks.blockMoved(blocks.activeBlock);
-                            blocks.adjustDocks(blocks.activeBlock, true);
-                        } else if (palettes.mouseOver) {
-                            palettes.menuScrollEvent(1, 10);
-                            palettes.hidePaletteIconCircles();
-                        } else if (palettes.activePalette != null) {
-                            palettes.activePalette.scrollEvent(STANDARDBLOCKHEIGHT, 1);
-                        } else if (scrollBlockContainer) {
-                            blocksContainer.y -= 20;
-                        }
-                        stage.update();
-                        break;
-                    case KEYCODE_DOWN:
-                        if (disableArrowKeys) {
-                        } else if (blocks.activeBlock != null) {
-                            blocks.moveStackRelative(blocks.activeBlock, 0, STANDARDBLOCKHEIGHT / 2);
-                            blocks.blockMoved(blocks.activeBlock);
-                            blocks.adjustDocks(blocks.activeBlock, true);
-                        } else if (palettes.mouseOver) {
-                            palettes.menuScrollEvent(-1, 10);
-                            palettes.hidePaletteIconCircles();
-                        } else if (palettes.activePalette != null) {
-                            palettes.activePalette.scrollEvent(-STANDARDBLOCKHEIGHT, 1);
-                        } else if (scrollBlockContainer) {
-                            blocksContainer.y += 20;
-                        }
-                        stage.update();
-                        break;
-                    case KEYCODE_LEFT:
-                        if (disableArrowKeys) {
-                        } else if (blocks.activeBlock != null) {
-                            blocks.moveStackRelative(blocks.activeBlock, -STANDARDBLOCKHEIGHT / 2, 0);
-                            blocks.blockMoved(blocks.activeBlock);
-                            blocks.adjustDocks(blocks.activeBlock, true);
-                        } else if (scrollBlockContainer) {
-                            blocksContainer.x -= 20;
-                        }
-                        stage.update();
-                        break;
-                    case KEYCODE_RIGHT:
-                        if (disableArrowKeys) {
-                        } else if (blocks.activeBlock != null) {
-                            blocks.moveStackRelative(blocks.activeBlock, STANDARDBLOCKHEIGHT / 2, 0);
-                            blocks.blockMoved(blocks.activeBlock);
-                            blocks.adjustDocks(blocks.activeBlock, true);
-                        } else if (scrollBlockContainer) {
-                            blocksContainer.x += 20;
-                        }
-                        stage.update();
-                        break;
-                    case HOME:
-                        if (palettes.mouseOver) {
-                            var dy = Math.max(55 - palettes.buttons['rhythm'].y, 0);
-                            palettes.menuScrollEvent(1, dy);
-                            palettes.hidePaletteIconCircles();
-                        } else if (palettes.activePalette != null) {
-                            palettes.activePalette.scrollEvent(-palettes.activePalette.scrollDiff, 1);
-                        } else {
-                            _findBlocks();
-                        }
-                        stage.update();
-                        break;
-                    case TAB:
-                        break;
-                    case ESC:
-                        if (searchWidget.style.visibility === 'visible') {
-                            searchWidget.style.visibility = 'hidden';
-                        } else {
-                            // toggle full screen
-                            _toggleToolbar();
-                        }
-                        break;
-                    case RETURN:
-                        if (disableArrowKeys) {
-                        } else if (docById('search').value.length > 0) {
-                            doSearch();
-                        } else {
-                            if (blocks.activeBlock == null || SPECIALINPUTS.indexOf(blocks.blockList[blocks.activeBlock].name) === -1) {
-                                logo.runLogoCommands();
-                            }
-                        }
-                        break;
-                    case KEYCODE_D:
-                        if (_THIS_IS_MUSIC_BLOCKS_) {
-                            __makeNewNote(4, 'do');
-                        }
-                        break;
-                    case KEYCODE_R:
-                        if (_THIS_IS_MUSIC_BLOCKS_) {
-                            __makeNewNote(4, 're');
-                        }
-                        break;
-                    case KEYCODE_M:
-                        if (_THIS_IS_MUSIC_BLOCKS_) {
-                            __makeNewNote(4, 'mi');
-                        }
-                        break;
-                    case KEYCODE_F:
-                        if (_THIS_IS_MUSIC_BLOCKS_) {
-                            __makeNewNote(4, 'fa');
-                        }
-                        break;
-                    case KEYCODE_S:
-                        if (_THIS_IS_MUSIC_BLOCKS_) {
-                            __makeNewNote(4, 'sol');
-                        }
-                        break;
-                    case KEYCODE_L:
-                        if (_THIS_IS_MUSIC_BLOCKS_) {
-                            __makeNewNote(4, 'la');
-                        }
-                        break;
-                    case KEYCODE_T:
-                        if (_THIS_IS_MUSIC_BLOCKS_) {
-                            __makeNewNote(4, 'ti');
-                        }
-                        break;
-                    default:
-                        break;
-                    }
-                }
-
-                // Always store current key so as not to mask it from
-                // the keyboard block.
-                currentKeyCode = event.keyCode;
-            }
-        };
-
-        function getCurrentKeyCode() {
-            return currentKeyCode;
-        };
-
-        function clearCurrentKeyCode() {
-            currentKey = '';
-            currentKeyCode = 0;
-        };
-
-        function _onResize() {
-            if (docById('labelDiv').classList.contains('hasKeyboard')) {
-                return;
-            }
-
-            if (!platform.androidWebkit) {
-                var w = window.innerWidth;
-                var h = window.innerHeight;
-            } else {
-                var w = window.outerWidth;
-                var h = window.outerHeight;
-            }
-
-            var smallSide = Math.min(w, h);
-
-            if (smallSide < cellSize * 9) {
-                var mobileSize = true;
-                if (w < cellSize * 10) {
-                    turtleBlocksScale = smallSide / (cellSize * 11);
-                } else {
-                    turtleBlocksScale = Math.max(smallSide / (cellSize * 11), 0.75);
-                }
-            } else {
-                var mobileSize = false;
-                if (w / 1200 > h / 900) {
-                    turtleBlocksScale = w / 1200;
-                } else {
-                    turtleBlocksScale = h / 900;
-                }
-            }
-
-            console.log('=====================');
-            console.log(turtleBlocksScale);
-            if (turtleBlocksScale < 0.5) {
-              turtleBlocksScale = 0.5;
-           } else if (turtleBlocksScale < 1) {
-              turtleBlocksScale = 1;
-           } else if (turtleBlocksScale < 1,5) {
-              turtleBlocksScale = 1.5;
-           } else {
-              turtleBlocksScale = 2;
-           }
-
-            stage.scaleX = turtleBlocksScale;
-            stage.scaleY = turtleBlocksScale;
-            console.log(turtleBlocksScale);
-            console.log('=====================')
-
-            stage.canvas.width = w;
-            stage.canvas.height = h;
-
-            /*
-            console.log('Resize: scale ' + turtleBlocksScale +
-            ', stageW ' + w + ', stageH ' + h +
-            ', canvasW ' + canvas.width + ', canvasH ' + canvas.height +
-            ', screenW ' + screen.width + ', screenH ' + screen.height);
-            */
-
-            turtles.setScale(turtleBlocksScale);
-            blocks.setScale(turtleBlocksScale);
-            boundary.setScale(w, h, turtleBlocksScale);
-            palettes.setScale(turtleBlocksScale);
-            trashcan.resizeEvent(turtleBlocksScale);
-            _setupAndroidToolbar(mobileSize);
-
-            // Reposition coordinate grids.
-            cartesianBitmap.x = (canvas.width / (2 * turtleBlocksScale)) - (600);
-            cartesianBitmap.y = (canvas.height / (2 * turtleBlocksScale)) - (450);
-            polarBitmap.x = (canvas.width / (2 * turtleBlocksScale)) - (600);
-            polarBitmap.y = (canvas.height / (2 * turtleBlocksScale)) - (450);
-            update = true;
-
-            // Setup help now that we have calculated turtleBlocksScale.
-            _showHelp(true);
-
-            // Hide palette icons on mobile
-            if (mobileSize) {
-                palettes.setMobile(true);
-                palettes.hide();
-            } else {
-                palettes.setMobile(false);
-                palettes.show();
-                palettes.bringToTop();
-            }
-
-            for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
-                turtles.turtleList[turtle].doClear(false, false, true);
-            }
-
-            var artcanvas = docById('overlayCanvas');
-            // Workaround for #795
-            if (mobileSize) {
-                artcanvas.width = w * 2;
-                artcanvas.height = h * 2;
-            } else {
-                artcanvas.width = w;
-                artcanvas.height = h;
-            }
-        };
-
-        window.onresize = function () {
-            _onResize();
-        };
-
-        function _restoreTrash() {
-            // Restore last stack pushed to trashStack.
-            // First, hide the palettes as they will need updating.
-            for (var name in blocks.palettes.dict) {
-                blocks.palettes.dict[name].hideMenu(true);
-            }
-            refreshCanvas();
-
-            var dx = 0;
-            var dy = -cellSize * 3; // Reposition blocks about trash area.
-
-            if (blocks.trashStacks.length === 0) {
-                console.log('Trash is empty--nothing to do');
-                return;
-            }
-
-            var thisBlock = blocks.trashStacks.pop();
-
-            // Restore drag group in trash
-            blocks.findDragGroup(thisBlock);
-            for (var b = 0; b < blocks.dragGroup.length; b++) {
-                var blk = blocks.dragGroup[b];
-                // console.log('Restoring ' + blocks.blockList[blk].name + ' from the trash.');
-                blocks.blockList[blk].trash = false;
-                blocks.moveBlockRelative(blk, dx, dy);
-                blocks.blockList[blk].show();
-            }
-
-            blocks.raiseStackToTop(thisBlock);
-
-            if (blocks.blockList[thisBlock].name === 'start' || blocks.blockList[thisBlock].name === 'drum') {
-                var turtle = blocks.blockList[thisBlock].value;
-                turtles.turtleList[turtle].trash = false;
-                turtles.turtleList[turtle].container.visible = true;
-            } else if (blocks.blockList[thisBlock].name === 'action') {
-                // We need to add a palette entry for this action.
-                // But first we need to ensure we have a unqiue name,
-                // as the name could have been taken in the interim.
-                var actionArg = blocks.blockList[blocks.blockList[thisBlock].connections[1]];
-                if (actionArg != null) {
-                    var oldName = actionArg.value;
-                    // Mark the action block as still being in the
-                    // trash so that its name won't be considered when
-                    // looking for a unique name.
-                    blocks.blockList[thisBlock].trash = true;
-                    var uniqueName = blocks.findUniqueActionName(oldName);
-                    blocks.blockList[thisBlock].trash = false;
-
-                    if (uniqueName !== actionArg) {
-                        console.log('renaming action when restoring from trash. old name: ' + oldName + ' unique name: ' + uniqueName);
-
-                        actionArg.value = uniqueName;
-
-                        var label = actionArg.value.toString();
-                        if (label.length > 8) {
-                            label = label.substr(0, 7) + '...';
-                        }
-                        actionArg.text.text = label;
-
-                        if (actionArg.label != null) {
-                            actionArg.label.value = uniqueName;
-                        }
-
-                        actionArg.container.updateCache();
-
-                        // Check the drag group to ensure any do
-                        // blocks are updated (in case of recursion).
-                        for (var b = 0; b < blocks.dragGroup.length; b++) {
-                            var me = blocks.blockList[blocks.dragGroup[b]];
-                            if (['nameddo', 'nameddoArg', 'namedcalc', 'namedcalcArg'].indexOf(me.name) !== -1 && me.privateData === oldName) {
-                                console.log('reassigning nameddo to ' + uniqueName);
-                                me.privateData = uniqueName;
-                                me.value = uniqueName;
-
-                                var label = me.value.toString();
-                                if (label.length > 8) {
-                                    label = label.substr(0, 7) + '...';
-                                }
-                                me.text.text = label;
-                                me.overrideName = label;
-                                me.regenerateArtwork();
-                                me.container.updateCache();
-                            }
-                        }
-                    }
-
-                    var actionName = actionArg.value;
-                    if (actionName !== _('action')) {
-                        // blocks.checkPaletteEntries('action');
-                        console.log('FIXME: Check for unique action name here');
-                    }
-                }
-            }
-
-            blocks.refreshCanvas();
-        };
-
-        function _deleteBlocksBox() {
-            _hideBoxes();
-            clearBox.createBox(turtleBlocksScale, deleteAllButton.x - 27, deleteAllButton.y - 55);
-            clearBox.show();
-        };
-
-        function doLanguageBox() {
-            _hideBoxes();
-            languageBox.createBox(turtleBlocksScale, saveButton.x - 27, saveButton.y - 55);
-            languageBox.show();
-        };
-
-        function _doUtilityBox() {
-            _hideBoxes();
-            utilityBox.init(turtleBlocksScale, utilityButton.x - 27, utilityButton.y, _makeButton, palettes.pluginsDeleteStatus);
-        };
-
-        function _doPlaybackBox() {
-            _hideBoxes();
-            playbackBox.init(turtleBlocksScale, playbackButton.x - 27, playbackButton.y, _makeButton, logo);
-        };
-
-        function sendAllToTrash(addStartBlock, doNotSave) {
-            // First, hide the palettes as they will need updating.
-            for (var name in blocks.palettes.dict) {
-                blocks.palettes.dict[name].hideMenu(true);
-            }
-
-            hideDOMLabel();
-            refreshCanvas();
-
-            var actionBlockCounter = 0;
-            var dx = 0;
-            var dy = cellSize * 3;
-            for (var blk in blocks.blockList) {
-                // If this block is at the top of a stack, push it
-                // onto the trashStacks list.
-                if (blocks.blockList[blk].connections[0] == null) {
-                    blocks.trashStacks.push(blk);
-                }
-
-                if (blocks.blockList[blk].name === 'start' || blocks.blockList[blk].name === 'drum') {
-                    console.log('start blk ' + blk + ' value is ' + blocks.blockList[blk].value)
-                    var turtle = blocks.blockList[blk].value;
-                    if (!blocks.blockList[blk].trash && turtle != null) {
-                        console.log('sending turtle ' + turtle + ' to trash');
-                        turtles.turtleList[turtle].trash = true;
-                        turtles.turtleList[turtle].container.visible = false;
-                    }
-                } else if (blocks.blockList[blk].name === 'action') {
-                    if (!blocks.blockList[blk].trash) {
-                        blocks.deleteActionBlock(blocks.blockList[blk]);
-                        actionBlockCounter += 1;
-                    }
-                }
-
-                blocks.blockList[blk].trash = true;
-                blocks.moveBlockRelative(blk, dx, dy);
-                blocks.blockList[blk].hide();
-            }
-
-            if (addStartBlock) {
-                logo.playbackQueue = {};
-                blocks.loadNewBlocks(DATAOBJS);
-                setPlaybackStatus();
-            } else if (!doNotSave) {
-                // Overwrite session data too.
-                saveLocally();
-            }
-
-            // Wait for palette to clear (#891)
-            // We really need to signal when each palette item is deleted
-            setTimeout(function() {
-                stage.dispatchEvent('trashsignal');
-           }, 1000 * actionBlockCounter);
-
-            update = true;
-        };
-
-        function _changePaletteVisibility() {
-            if (palettes.visible) {
-                palettes.hide();
-            } else {
-                palettes.show();
-                palettes.bringToTop();
-            }
-        };
-
-        function _changeBlockVisibility() {
-            hideDOMLabel();
-
-            if (blocks.visible) {
-                logo.hideBlocks();
-                palettes.hide();
-            } else {
-                if (chartBitmap != null) {
-                    stage.removeChild(chartBitmap);
-                    chartBitmap = null;
-                }
-
-                logo.showBlocks();
-                palettes.show();
-                palettes.bringToTop();
-            }
-
-            // Combine block and palette visibility into one button.
-            // _changePaletteVisibility();
-        };
-
-        function _toggleCollapsibleStacks() {
-            hideDOMLabel();
-
-            if (blocks.visible) {
-                console.log('calling toggleCollapsibles');
-                blocks.toggleCollapsibles();
-            }
-        };
-
-        function onStopTurtle() {
-            // TODO: plugin support
-            if (stopTurtleContainer.visible) {
-                _hideStopButton();
-                setPlaybackStatus();
-            }
-        };
-
-        function onRunTurtle() {
-            // TODO: plugin support
-            // If the stop button is hidden, show it.
-            if (!stopTurtleContainer.visible) {
-                _showStopButton();
-            }
-        };
-
-        function refreshCanvas() {
-            update = true;
-        };
-
-        function __tick(event) {
-            // This set makes it so the stage only re-renders when an
-            // event handler indicates a change has happened.
-            if (update || createjs.Tween.hasActiveTweens()) {
-                update = false; // Only update once
-                stage.update(event);
-            }
-        };
-
-        function _doOpenSamples() {
-            planet.openPlanet();
-        };
-
-        function doSave() {
-            _hideBoxes();
-            saveBox.init(turtleBlocksScale, saveButton.x - 27, saveButton.y - 97, _makeButton);
-        };
-
-        function doUploadToPlanet() {
-            planet.openPlanet();
-        };
-
-        function doShareOnFacebook() {
-            alert('Facebook Sharing : disabled');    // remove when add fb share link
-            // add code for facebook share link
-        };
-
-        function doLoad(merge) {
-            if (merge === undefined) {
-                merge = false;
-            }
-
-            if (merge) {
-                console.log('merge load');
-                merging = true;
-            } else {
-                merging = false;
-            }
-
-            console.log('Loading .tb file');
-            document.querySelector('#myOpenFile').focus();
-            document.querySelector('#myOpenFile').click();
-            window.scroll(0, 0);
-            doStopButton();
-            _allClear();
-        };
-
-        window.prepareExport = prepareExport;
-
-        function runProject (env) {
-            console.log('Running Project from Event');
-            document.removeEventListener('finishedLoading', runProject);
-            setTimeout(function () {
-                console.log('Run');
-                _changeBlockVisibility();
-                _doFastButton(env);
-            }, 5000);
-        }
-
-        function loadProject (projectID, flags, env) {
-            //set default value of run
-            flags = typeof flags !== 'undefined' ? flags : {run: false, show: false, collapse: false};
-            loading = true;
-            document.body.style.cursor = 'wait';
-
-            // palettes.updatePalettes();
-            setTimeout(function () {
-                try {
-                    planet.openProjectFromPlanet(projectID, function() {loadStartWrapper(_loadStart);});
-                } catch (e) {
-                    console.log(e);
-                    console.log('_loadStart on error');
-                    loadStartWrapper(_loadStart);
-                }
-
-                planet.initialiseNewProject();
-                // Restore default cursor
-                loading = false;
-                document.body.style.cursor = 'default';
-                update = true;
-            }, 200);
-
-            var run = flags.run;
-            var show = flags.show;
-            var collapse = flags.collapse;
-
-            var __functionload = function () {
-                setTimeout(function () {
-                    if (!collapse && firstRun) {
-                        _toggleCollapsibleStacks();
-                    }
-
-                    if (run && firstRun) {
-                        for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
-                            turtles.turtleList[turtle].doClear(true, true, false);
-                        }
-
-                        runProject(env);
-
-                        if (show) {
-                            _changeBlockVisibility();
-                        }
-
-                        if (!collapse) {
-                            _toggleCollapsibleStacks();
-                        }
-                    } else if (!show) {
-                        _changeBlockVisibility();
-                    }
-
-                    document.removeEventListener('finishedLoading', __functionload);
-                    firstRun = false;
-                }, 1000);
-            }
-
-            if (document.addEventListener) {
-                document.addEventListener('finishedLoading', __functionload, false);
-            } else {
-                document.attachEvent('finishedLoading', __functionload);
-            }
-        };
-
-        // Calculate time such that no matter how long it takes to
-        // load the program, the loading animation will cycle at least
-        // once.
-        function loadStartWrapper(func, arg1, arg2, arg3) {
-            var time1 = new Date();
-            func(arg1, arg2, arg3);
-
-            var time2 = new Date();
-            var elapsedTime = time2.getTime() - time1.getTime();
-            var timeLeft = Math.max(6000 - elapsedTime);
-            setTimeout(showContents, timeLeft);
-        };
-
-        // Hides the loading animation and unhides the background.
-        function showContents() {
-            docById('loading-image-container').style.display = 'none';
-            // docById('canvas').style.display = 'none';
-            docById('hideContents').style.display = 'block';
-
-            // Warn the user -- chrome only -- if the browser level is
-            // not set to 100%
-            if (window.innerWidth !== window.outerWidth) {
-                blocks.errorMsg(_('Please set browser zoom level to 100%'));
-                console.log('zoom level is not 100%: ' + window.innerWidth + ' !== ' + window.outerWidth);
-            }
-        };
-
-        function _loadStart() {
-            // where to put this?
-            // palettes.updatePalettes();
-            justLoadStart = function () {
-                console.log('loading start and a matrix');
-                logo.playbackQueue = {};
-                blocks.loadNewBlocks(DATAOBJS);
-                setPlaybackStatus();
-            };
-
-            sessionData = null;
-
-            // Try restarting where we were when we hit save.
-            if (planet) {
-                sessionData = planet.openCurrentProject();
-            } else {
-                var currentProject = storage.currentProject;
-                sessionData = storage['SESSION' + currentProject];
-            }
-
-            var __afterLoad = function () {
-                if (!turtles.running()) {
-                    setTimeout(function() { 
-                        console.log('reset turtles ' + turtles.turtleList.length);
-                 
-                        for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
-                            logo.turtleHeaps[turtle] = [];
-                            logo.notationStaging[turtle] = [];
-                            logo.notationDrumStaging[turtle] = [];
-                            turtles.turtleList[turtle].doClear(true, true, false);
-                        }
-
-                        playbackOnLoad();
-                    }, 1000);
-                }
-
-                document.removeEventListener('finishedLoading', __afterLoad);
-            };
-
-            // After we have finished loading the project, clear all
-            // to ensure a clean start.
-            if (document.addEventListener) {
-                document.addEventListener('finishedLoading', __afterLoad);
-            } else {
-                document.attachEvent('finishedLoading', __afterLoad);
-            }
-
-            if (sessionData) {
-                try {
-                    if (sessionData === 'undefined' || sessionData === '[]') {
-                        console.log('empty session found: loading start');
-                        justLoadStart();
-                    } else {
-                        console.log('restoring session: ' + sessionData);
-                        // First, hide the palettes as they will need updating.
-                        for (var name in blocks.palettes.dict) {
-                            blocks.palettes.dict[name].hideMenu(true);
-                        }
-
-                        logo.playbackQueue = {};
-                        blocks.loadNewBlocks(JSON.parse(sessionData));
-                        setPlaybackStatus();
-                    }
-                } catch (e) {
-                    console.log(e);
-                }
-            } else {
-                justLoadStart();
-            }
-
-            update = true;
-        };
-
-        function hideMsgs() {
-            console.log('hiding messages');
-            errorMsgText.parent.visible = false;
-            if (errorMsgArrow != null) {
-                errorMsgArrow.removeAllChildren();
-                refreshCanvas();
-            }
-
-            msgText.parent.visible = false;
-            for (var i in errorArtwork) {
-                errorArtwork[i].visible = false;
-            }
-
-            refreshCanvas();
-        };
-
-        function textMsg(msg) {
-            if (msgText == null) {
-                // The container may not be ready yet, so do nothing.
-                return;
-            }
-            var msgContainer = msgText.parent;
-            msgContainer.visible = true;
-            msgText.text = msg;
-            msgContainer.updateCache();
-            stage.setChildIndex(msgContainer, stage.children.length - 1);
-        };
-
-        function errorMsg(msg, blk, text, timeout) {
-            if (logo.optimize) {
-                return;
-            }
-
-            if (errorMsgTimeoutID != null) {
-                clearTimeout(errorMsgTimeoutID);
-            }
-
-            // Hide the button, as the program is going to be
-            // terminated.
-            _hideStopButton();
-
-            if (errorMsgText == null) {
-                // The container may not be ready yet, so do nothing.
-                return;
-            }
-
-            if (blk !== undefined && blk != null && !blocks.blockList[blk].collapsed) {
-                var fromX = (canvas.width - 1000) / 2;
-                var fromY = 128;
-                var toX = blocks.blockList[blk].container.x + blocksContainer.x;
-                var toY = blocks.blockList[blk].container.y + blocksContainer.y;
-
-                if (errorMsgArrow == null) {
-                    errorMsgArrow = new createjs.Container();
-                    stage.addChild(errorMsgArrow);
-                }
-
-                var line = new createjs.Shape();
-                errorMsgArrow.addChild(line);
-                line.graphics.setStrokeStyle(4).beginStroke('#ff0031').moveTo(fromX, fromY).lineTo(toX, toY);
-                stage.setChildIndex(errorMsgArrow, stage.children.length - 1);
-
-                var angle = Math.atan2(toX - fromX, fromY - toY) / Math.PI * 180;
-                var head = new createjs.Shape();
-                errorMsgArrow.addChild(head);
-                head.graphics.setStrokeStyle(4).beginStroke('#ff0031').moveTo(-10, 18).lineTo(0, 0).lineTo(10, 18);
-                head.x = toX;
-                head.y = toY;
-                head.rotation = angle;
-            }
-
-            switch (msg) {
-            case NOMICERRORMSG:
-                errorArtwork['nomicrophone'].visible = true;
-                stage.setChildIndex(errorArtwork['nomicrophone'], stage.children.length - 1);
-                break;
-            case NOSTRINGERRORMSG:
-                errorArtwork['notastring'].visible = true;
-                stage.setChildIndex(errorArtwork['notastring'], stage.children.length - 1);
-                break;
-            case EMPTYHEAPERRORMSG:
-                errorArtwork['emptyheap'].visible = true;
-                stage.setChildIndex(errorArtwork['emptyheap'], stage.children.length - 1);
-                break;
-            case NOSQRTERRORMSG:
-                errorArtwork['negroot'].visible = true;
-                stage.setChildIndex(errorArtwork['negroot'], stage.children.length - 1);
-                break;
-            case NOACTIONERRORMSG:
-                if (text == null) {
-                    text = 'foo';
-                }
-                errorArtwork['nostack'].children[1].text = text;
-                errorArtwork['nostack'].visible = true;
-                errorArtwork['nostack'].updateCache();
-                stage.setChildIndex(errorArtwork['nostack'], stage.children.length - 1);
-                break;
-            case NOBOXERRORMSG:
-                if (text == null) {
-                    text = 'foo';
-                }
-                errorArtwork['emptybox'].children[1].text = text;
-                errorArtwork['emptybox'].visible = true;
-                errorArtwork['emptybox'].updateCache();
-                stage.setChildIndex(errorArtwork['emptybox'], stage.children.length - 1);
-                break;
-            case ZERODIVIDEERRORMSG:
-                errorArtwork['zerodivide'].visible = true;
-                stage.setChildIndex(errorArtwork['zerodivide'], stage.children.length - 1);
-                break;
-              case NANERRORMSG:
-                errorArtwork['notanumber'].visible = true;
-                stage.setChildIndex(errorArtwork['notanumber'], stage.children.length - 1);
-                break;
-            case NOINPUTERRORMSG:
-                errorArtwork['noinput'].visible = true;
-                stage.setChildIndex(errorArtwork['noinput'], stage.children.length - 1);
-                break;
-            default:
-                var errorMsgContainer = errorMsgText.parent;
-                errorMsgContainer.visible = true;
-                errorMsgText.text = msg;
-                stage.setChildIndex(errorMsgContainer, stage.children.length - 1);
-                errorMsgContainer.updateCache();
-                break;
-            }
-
-            if (timeout != undefined) {
-                var myTimeout = timeout;
-            } else {
-                var myTimeout = _ERRORMSGTIMEOUT_;
-            }
-
-            if (myTimeout > 0) {
-                errorMsgTimeoutID = setTimeout(function () {
-                    hideMsgs();
-                }, myTimeout);
-            }
-
-            update = true;
-        };
-
-        function _hideCartesian() {
-            cartesianBitmap.visible = false;
-            cartesianBitmap.updateCache();
-            update = true;
-        };
-
-        function _showCartesian() {
-            cartesianBitmap.visible = true;
-            cartesianBitmap.updateCache();
-            update = true;
-        };
-
-        function _hidePolar() {
-            polarBitmap.visible = false;
-            polarBitmap.updateCache();
-            update = true;
-        };
-
-        function _showPolar() {
-            polarBitmap.visible = true;
-            polarBitmap.updateCache();
-            update = true;
-        };
-
-        function pasteStack() {
-            blocks.pasteStack();
-        };
-
-        function prepareExport() {
-            // We don't save blocks in the trash, so we need to
-            // consolidate the block list and remap the connections.
-            var blockMap = [];
-            var hasMatrixDataBlock = false;
-            for (var blk = 0; blk < blocks.blockList.length; blk++) {
-                var myBlock = blocks.blockList[blk];
-                if (myBlock.trash) {
-                    // Don't save blocks in the trash.
-                    continue;
-                }
-
-                blockMap.push(blk);
-            }
-
-            var data = [];
-            for (var blk = 0; blk < blocks.blockList.length; blk++) {
-                var myBlock = blocks.blockList[blk];
-                if (myBlock.trash) {
-                    // Don't save blocks in the trash.
-                    continue;
-                }
-
-                if (myBlock.isValueBlock() || myBlock.name === 'loadFile' || myBlock.name === 'boolean') {
-                    // FIX ME: scale image if it exceeds a maximum size.
-                    var args = {
-                        'value': myBlock.value
-                    };
-                } else {
-                    switch (myBlock.name) {
-                    case 'start':
-                    case 'drum':
-                        // Find the turtle associated with this block.
-                        var turtle = turtles.turtleList[myBlock.value];
-                        if (turtle == null) {
-                            var args = {
-                                'collapsed': false,
-                                'xcor': 0,
-                                'ycor': 0,
-                                'heading': 0,
-                                'color': 0,
-                                'shade': 50,
-                                'pensize': 5,
-                                'grey': 100
-                            };
-                        } else {
-                            var args = {
-                                'collapsed': myBlock.collapsed,
-                                'xcor': turtle.x,
-                                'ycor': turtle.y,
-                                'heading': turtle.orientation,
-                                'color': turtle.color,
-                                'shade': turtle.value,
-                                'pensize': turtle.stroke,
-                                'grey': turtle.chroma
-                            };
-                        }
-                        break;
-                    case 'action':
-                    case 'matrix':
-                    case 'pitchdrummatrix':
-                    case 'rhythmruler':
-                    case 'timbre':
-                    case 'pitchstaircase':
-                    case 'tempo':
-                    case 'pitchslider':
-                    case 'modewidget':
-                    case 'status':
-                        var args = {
-                            'collapsed': myBlock.collapsed
-                        }
-                        break;
-                    case 'namedbox':
-                    case 'storein2':
-                    case 'nameddo':
-                    case 'nameddoArg':
-                    case 'namedcalc':
-                    case 'namedcalcArg':
-                    case 'namedarg':
-                        var args = {
-                            'value': myBlock.privateData
-                        }
-                        break;
-                    case 'nopValueBlock':
-                    case 'nopZeroArgBlock':
-                    case 'nopOneArgBlock':
-                    case 'nopTwoArgBlock':
-                    case 'nopThreeArgBlock':
-                        // restore original block name
-                        myBlock.name = myBlock.privateData;
-                        var args = {}
-                        break;
-                    case 'matrixData':
-                        // deprecated
-                        var args = {
-                            'notes': window.savedMatricesNotes,
-                            'count': window.savedMatricesCount
-                        }
-                        hasMatrixDataBlock = true;
-                        break;
-                    default:
-                        var args = {}
-                        break;
-                    }
-                }
-
-                connections = [];
-                for (var c = 0; c < myBlock.connections.length; c++) {
-                    var mapConnection = blockMap.indexOf(myBlock.connections[c]);
-                    if (myBlock.connections[c] == null || mapConnection === -1) {
-                        connections.push(null);
-                    } else {
-                        connections.push(mapConnection);
-                    }
-                }
-
-                data.push([blockMap.indexOf(blk), [myBlock.name, args], myBlock.container.x, myBlock.container.y, connections]);
-            }
-
-            // Next, save the playback queue, but don't save the
-            // playback queue if we are saving to Lilypond.
-
-            if (logo.runningLilypond) {
-                logo.playbackQueue = {};
-            }
-
-            var i = data.length;
-            if (i > 0) {
-                for (var turtle = 0; turtle < turtles.turtleList.length; turtle++) {
-                    if (turtle in logo.playbackQueue) {
-                        for (var j = 0; j < logo.playbackQueue[turtle].length; j++) {
-                            data.push([i, turtle, logo.playbackQueue[turtle][j]]);
-                            i += 1;
-                        }
-                    }
-                }
-            }
-
-            return JSON.stringify(data);
-        };
-
-        function doOpenPlugin() {
-            // Click on the plugin open chooser in the DOM (.json).
-            pluginChooser.focus();
-            pluginChooser.click();
-        };
-
-        function _hideStopButton() {
-            stopTurtleContainer.visible = false;
-            hardStopTurtleContainer.visible = true;
-        };
-
-        function _showStopButton() {
-            // stopTurtleContainer.x = onscreenButtons[0].x;
-            // stopTurtleContainer.y = onscreenButtons[0].y;
-            stopTurtleContainer.visible = true;
-            hardStopTurtleContainer.visible = false;
-        };
-
-        function blinkPasteButton(bitmap) {
-            function handleComplete() {
-                createjs.Tween.get(bitmap).to({alpha:1, visible:true}, 500);
-            };
-
-            createjs.Tween.get(bitmap).to({alpha:0, visible:false}, 1000).call(
-handleComplete);
-        };
-
-        function updatePasteButton() {
-            if (blocks.selectedBlocksObj == null) {
-                pasteContainer.removeAllChildren();
-                var img = new Image();
-
-                img.onload = function () {
-                    var originalSize = 55; // this is the original svg size
-                    var halfSize = Math.floor(cellSize / 2);
-
-                    bitmapDisablePaste = new createjs.Bitmap(img);
-                    if (cellSize !== originalSize) {
-                        bitmapDisablePaste.scaleX = cellSize / originalSize;
-                        bitmapDisablePaste.scaleY = cellSize / originalSize;
-                    }
-
-                    bitmapDisablePaste.regX = halfSize / bitmapDisablePaste.scaleX;
-                    bitmapDisablePaste.regY = halfSize / bitmapDisablePaste.scaleY;
-                    pasteContainer.addChild(bitmapDisablePaste);
-
-                    update = true;
-                };
-
-                img.src = 'header-icons/paste-disabled-button.svg';
-                return;
-            }
-            if (pasteImage === null) {
-                console.log('Updating paste button');
-                var img = new Image();
-
-                img.onload = function () {
-                    var originalSize = 55; // this is the original svg size
-                    var halfSize = Math.floor(cellSize / 2);
-
-                    bitmapActivePaste = new createjs.Bitmap(img);
-                    if (cellSize !== originalSize) {
-                        bitmapActivePaste.scaleX = cellSize / originalSize;
-                        bitmapActivePaste.scaleY = cellSize / originalSize;
-                    }
-
-                    bitmapActivePaste.regX = halfSize / bitmapActivePaste.scaleX;
-                    bitmapActivePaste.regY = halfSize / bitmapActivePaste.scaleY;
-                    pasteContainer.addChild(bitmapActivePaste);
-                    pasteImage = bitmapActivePaste;
-
-                    update = true;
-                };
-
-                img.src = 'header-icons/paste-button.svg';
-            } else {
-                pasteContainer.addChild(bitmapActivePaste);
-                console.log('Blinking paste button');
-                blinkPasteButton(pasteImage);
-            }
-        };
-
-        function _setupAndroidToolbar(showPalettesPopover) {
-            // NOTE: see getMainToolbarButtonNames in turtledefs.js
-
-            if (headerContainer !== undefined) {
-                stage.removeChild(headerContainer);
-                for (var i in onscreenButtons) {
-                    stage.removeChild(onscreenButtons[i]);
-                }
-            }
-
-            headerContainer = new createjs.Shape();
-            headerContainer.graphics.f(platformColor.header).r(0, 0, screen.width / turtleBlocksScale, cellSize);
-
-            if (platformColor.doHeaderShadow) {
-                headerContainer.shadow = new createjs.Shadow('#777', 0, 2, 2);
-            }
-
-            stage.addChild(headerContainer);
-
-            // Buttons used when running turtle programs:
-            // button name, on-press function, hover label,
-            // on-long-press function, on-extra-long-press function,
-            // on-long-press icon, on-extra-long-press icon
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                var buttonNames = [
-                    ['run', _doFastButton, _('Run fast') + ' / ' + _('long press to run slowly') + ' / ' + _('extra-long press to run music slowly') + ' [ENTER]', _doSlowButton, _doSlowMusicButton, 'slow-button', 'slow-music-button'],
-                    ['step', _doStepButton, _('Run step by step'), null, null, null, null],
-                    ['step-music', _doStepMusicButton, _('Run note by note'), null, null, null, null],
-                    ['hard-stop-turtle', doHardStopButton, _('Hard stop') + ' [Alt-S]', null, null, null, null],
-                    ['stop-turtle', doStopButton, _('Stop') + ' [Alt-S]', doHardStopButton, null, 'stop-turtle-button', null],
-                    ['clear', _allClear, _('Clean') + ' [Alt-E]', null, null, null, null],
-                    // ['palette', _changePaletteVisibility, _('Show/hide palettes'), null, null, null, null],
-                    ['hide-blocks', _changeBlockVisibility, _('Show/hide blocks'), null, null, null, null],
-                    ['collapse-blocks', _toggleCollapsibleStacks, _('Expand/collapse collapsable blocks'), null, null, null, null],
-                    ['go-home', _findBlocks, _('Home') + ' [HOME]', null, null, null, null],
-                ];
-
-                if (beginnerMode) {
-                    buttonNames.push(['beginner', _doSwitchMode, _('Switch to advanced mode'), null, null, null, null]);
-                } else {
-                    buttonNames.push(['advanced', _doSwitchMode, _('Switch to beginner mode'), null, null, null, null]);
-                }
-
-                buttonNames.push(['help', _showHelp, _('Help'), null, null, null, null]);
-            } else {
-                var buttonNames = [
-                    ['run', _doFastButton, _('Run fast') + ' / ' + _('long press to run slowly') + ' [ENTER]', _doSlowButton, null, 'slow-button', null],
-                    ['step', _doStepButton, _('Run step by step'), null, null, null, null],
-                    ['hard-stop-turtle', doHardStopButton, _('Hard stop') + ' [Alt-S]', null, null, null, null],
-                    ['stop-turtle', doStopButton, _('Stop') + ' [Alt-S]', null, null, null, null],
-                    ['clear', _allClear, _('Clean') + ' [Alt-E]', null, null, null, null],
-                    ['hide-blocks', _changeBlockVisibility, _('Show/hide blocks'), null, null, null, null],
-                    ['collapse-blocks', _toggleCollapsibleStacks, _('Expand/collapse collapsable blocks'), null, null, null, null],
-                    ['go-home', _findBlocks, _('Home') + ' [HOME]', null, null, null, null],
-                    ['help', _showHelp, _('Help'), null, null, null, null]
-                ];
-            }
-
-            if (sugarizerCompatibility.isInsideSugarizer()) {
-                buttonNames.push(['sugarizer-stop', function () {
-                    sugarizerCompatibility.data.blocks = prepareExport();
-                    sugarizerCompatibility.saveLocally(function () {
-                        sugarizerCompatibility.sugarizerStop();
-                    });
-                }, 'Stop', null, null, null, null]);
-            }
-
-            if (showPalettesPopover) {
-                buttonNames.unshift(['popdown-palette', doPopdownPalette]);
-            }
-
-            var btnSize = cellSize;
-            var x = Math.floor(btnSize / 2);
-            var y = x;
-            var dx = btnSize;
-            var dy = 0;
-
-            for (var i = 0; i < buttonNames.length; i++) {
-                if (!getMainToolbarButtonNames(buttonNames[i][0])) {
-                    console.log('continue');
-                    continue;
-                }
-
-                var container = _makeButton(buttonNames[i][0] + '-button', buttonNames[i][2], x, y, btnSize, 0);
-                _loadButtonDragHandler(container, x, y, buttonNames[i][1], buttonNames[i][3], buttonNames[i][4], buttonNames[i][5], buttonNames[i][6]);
-                onscreenButtons.push(container);
-
-                if (buttonNames[i][0] === 'stop-turtle') {
-                    stopTurtleContainer = container;
-                } else if (buttonNames[i][0] === 'hard-stop-turtle') {
-                    console.log('hard stop turtle');
-                    hardStopTurtleContainer = container;
-                } else if (buttonNames[i][0] === 'go-home') {
-                    homeButtonContainers = [];
-                    homeButtonContainers.push(container);
-                    var container2 = _makeButton('go-home-faded-button', _('Home') + ' [HOME]', x, y, btnSize, 0);
-                    _loadButtonDragHandler(container2, x, y, buttonNames[i][1], null, null, null, null);
-                    homeButtonContainers.push(container2);
-                    onscreenButtons.push(container2);
-                    homeButtonContainers[0].visible = false;
-                    homeButtonContainers[1].visible = true;
-                    boundary.hide();
-                    blocks.setHomeContainers(homeButtonContainers, boundary);
-                }
-
-                // Ensure that stop-turtle button is placed on top of
-                // hard-stop-turtle button.
-                if (!(buttonNames[i][0] === 'hard-stop-turtle' && buttonNames[i + 1][0] === 'stop-turtle')) {
-                    x += dx;
-                    y += dy;
-                }
-                //x += dx;
-                //y += dy;
-            }
-
-            _setupRightMenu(turtleBlocksScale);
-        };
-
-        function _doMergeLoad() {
-            console.log('merge load');
-            doLoad(true);
-        }
-
-        function _setupRightMenu(turtleBlocksScale) {
-            if (menuContainer !== undefined) {
-                stage.removeChild(menuContainer);
-                for (var i in onscreenMenu) {
-                    stage.removeChild(onscreenMenu[i]);
-                }
-            }
-
-            // NOTE: see getAuxToolbarButtonNames in turtledefs.js
-            // Misc. other buttons
-            // name / onpress function / label / onlongpress function / onextralongpress function / onlongpress icon / onextralongpress icon
-            if (planet) {
-                var planetMenuItem = ['planet', _doOpenSamples, _('Load samples from server'), null, null, null, null];
-            } else {
-                var planetMenuItem = ['planet-disabled', null, _('The Planet is unavailable.'), null, null, null, null];
-            }
-
-            if (_THIS_IS_MUSIC_BLOCKS_) {
-                var menuNames = [
-                    planetMenuItem,
-                    ['open', doLoad, _('Load project from files'), _doMergeLoad, _doMergeLoad, 'open-merge-button', 'open-merge-button'],
-                    ['save', doSave, _('Save project'), null, null, null, null],
-                    ['paste-disabled', pasteStack, _('Long press on blocks to copy.') + ' [Alt-C] ' + _('Click here to paste.') + ' [Alt-V]', null, null, null, null],
-                    ['Cartesian', _doCartesianPolar, _('Cartesian') + '/' + _('Polar'), null, null, null, null],
-                    ['compile', _doPlaybackBox, _('playback'), null, null, null, null],
-                    ['utility', _doUtilityBox, _('Settings'), null, null, null, null],
-                    ['new', _deleteBlocksBox, _('New Project'), null, null, null, null],
-                    ['restore-trash', _restoreTrash, _('Restore'), null, null, null, null]
-                ];
-            } else {
-                var menuNames = [
-                    planetMenuItem,
-                    ['open', doLoad, _('Load project from files'), _doMergeLoad, _doMergeLoad, 'open-merge-button', 'open-merge-button'],
-                    ['save', doSave, _('Save project'), null, null, null, null],
-                    ['paste-disabled', pasteStack, _('Paste'), null, null, null, null],
-                    ['Cartesian', _doCartesianPolar, _('Cartesian') + '/' + _('Polar'), null, null, null, null],
-                    ['compile', _doPlaybackBox, _('playback'), null, null, null, null],
-                    ['utility', _doUtilityBox, _('Settings'), null, null, null, null],
-                    ['new', _deleteBlocksBox, _('Delete all'), null, null, null, null],
-                    ['restore-trash', _restoreTrash, _('Restore'), null, null, null, null]
-                ];
-            }
-
-            if (planet) {
-                document.querySelector('#myOpenFile').addEventListener('change', function (event) {
-                    planet.closePlanet();
-                });
-            }
-
-            var btnSize = cellSize;
-            var x = Math.floor(canvas.width / turtleBlocksScale) - btnSize / 2;
-            var y = Math.floor(btnSize / 2);
-
-            var dx = 0;
-            var dy = btnSize;
-
-            menuContainer = _makeButton('menu-button', '', x, y, btnSize, menuButtonsVisible ? 90 : undefined);
-            _loadButtonDragHandler(menuContainer, x, y, _doMenuButton, null, null, null, null);
-
-            for (var i = 0; i < menuNames.length; i++) {
-                if (!getAuxToolbarButtonNames(menuNames[i][0])) {
-                    continue;
-                }
-
-                x += dx;
-                y += dy;
-                var container = _makeButton(menuNames[i][0] + '-button', menuNames[i][2], x, y, btnSize, 0);
-                if (menuNames[i][0] === 'paste-disabled') {
-                    pasteContainer = container;
-                } else if (menuNames[i][0] === 'Cartesian') {
-                    gridContainer = container;
-
-                    var gridButtons = ['header-icons/Cartesian-polar-button.svg', 'header-icons/polar-button.svg', 'header-icons/no-grid-button.svg'];
-                    for (var j = 0; j < gridButtons.length; j++) {
-                        _makeExtraGridButtons(gridButtons[j], 250 + j * 250);
-                    }
-                }
-
-                _loadButtonDragHandler(container, x, y, menuNames[i][1],menuNames[i][3],menuNames[i][4],menuNames[i][5],menuNames[i][6]);
-                onscreenMenu.push(container);
-                if (menuNames[i][0] === 'utility') {
-                    utilityButton = container;
-                } else if (menuNames[i][0] === 'save') {
-                    saveButton = container;
-                } else if (menuNames[i][0] === 'compile') {
-                    playbackButton = container;
-                } else if (menuNames[i][0] === 'new') {
-                    deleteAllButton = container;
-                }
-
-                container.visible = false;
-            }
-
-            if (menuButtonsVisible) {
-                for (var button in onscreenMenu) {
-                    onscreenMenu[button].visible = true;
-                }
-            }
-        };
-
-        function _makeExtraGridButtons(name, delay) {
-            setTimeout(function () {
-                var img = new Image();
-
-                img.onload = function () {
-                    var originalSize = 55;
-                    var halfSize = Math.floor(cellSize / 2);
-
-                    var bitmap = new createjs.Bitmap(img);
-                    if (cellSize !== originalSize) {
-                        bitmap.scaleX = cellSize / originalSize;
-                        bitmap.scaleY = cellSize / originalSize;
-                    }
-
-                    bitmap.regX = halfSize / bitmap.scaleX;
-                    bitmap.regY = halfSize / bitmap.scaleY;
-                    gridContainer.addChild(bitmap);
-                    bitmap.visible = false;
-                    gridImages.push(bitmap);
-
-                    update = true;
-                };
-
-                img.src = name;
-            }, delay);
-        };
-
-        function doPopdownPalette() {
-            console.log('doPopdownPalette');
-            var p = new PopdownPalette(palettes);
-            p.popdown();
-        };
-
-        function _showHelp(firstTime) {
-            helpIdx = 0;
-
-            var __setHelpHTML = function (helpIdx, imageScale) {
-                if (HELPCONTENT[helpIdx].length > 4) {
-                    try {
-                        var helpLang = localStorage.languagePreference;
-                    } catch (e) {
-                        var helpLang = 'en';
-                    }
-
-                    if (_THIS_IS_MUSIC_BLOCKS_) {
-                        switch (helpLang) {
-                        case 'ja':
-                            docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '"</img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p><p><a href="' + HELPCONTENT[helpIdx][3] + '-ja" target="_blank">' + HELPCONTENT[helpIdx][4] + '</a></p>';
-                            break;
-                        default:
-                            docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '"</img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p><p><a href="' + HELPCONTENT[helpIdx][3] + '" target="_blank">' + HELPCONTENT[helpIdx][4] + '</a></p>';
-                            break;
-                        }
-                    } else {
-                        docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '"</img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p><p><a href="' + HELPCONTENT[helpIdx][3] + '" target="_blank">' + HELPCONTENT[helpIdx][4] + '</a></p>';
-                    }
-                } else {
-
-                    docById('helpElem').innerHTML = '<img src ="' + HELPCONTENT[helpIdx][2] + '" style="height:' + imageScale + 'px; width: auto"></img> <h2>' + HELPCONTENT[helpIdx][0] + '</h2><p>' + HELPCONTENT[helpIdx][1] + '</p>';
-                }
-            };
-
-            if (firstTime) {
-                if (helpContainer == null) {
-                    helpContainer = new createjs.Container();
-                    stage.addChild(helpContainer);
-                    helpContainer.x = 65;
-                    helpContainer.y = 65;
-
-                    helpContainer.on('click', function (event) {
-                        var bounds = helpContainer.getBounds();
-                        if (event.stageY < helpContainer.y + bounds.height / 2) {
-                            helpContainer.visible = false;
-                            docById('helpElem').style.visibility = 'hidden';
-                        } else {
-                            if (event.stageX < helpContainer.x + bounds.width / 2) {
-                                if (helpIdx === 0) {
-                                    helpIdx = 0;
-                                } else {
-                                    helpIdx -= 1;
-                                }
-                            } else {
-                                helpIdx += 1;
-                                if (helpIdx >= HELPCONTENT.length) {
-                                    helpIdx = 0;
-                                }
-                            }
-
-                            var imageScale = 55 * turtleBlocksScale;
-                            __setHelpHTML(helpIdx, imageScale);
-                        }
-
-                        update = true;
-                    });
-
-                    var img = new Image();
-                    img.onload = function () {
-                        console.log(turtleBlocksScale);
-                        var bitmap = new createjs.Bitmap(img);
-                        if (helpContainer.children.length > 0) {
-                            console.log('delete old help container');
-                            helpContainer.removeChild(helpContainer.children[0]);
-                        }
-
-                        helpContainer.addChild(bitmap)
-
-                        var bounds = helpContainer.getBounds();
-                        var hitArea = new createjs.Shape();
-                        hitArea.graphics.beginFill('#FFF').drawRect(bounds.x, bounds.y, bounds.width, bounds.height);
-                        hitArea.x = 0;
-                        hitArea.y = 0;
-                        helpContainer.hitArea = hitArea;
-
-                        var imageScale = 55 * turtleBlocksScale;
-                        __setHelpHTML(helpIdx, imageScale);
-
-                        if (!doneTour) {
-                            docById('helpElem').style.visibility = 'visible';
-                        }
-
-                        update = true;
-                    };
-
-                    img.src = 'images/help-container.svg';
-                }
-
-                var helpElem = docById('helpElem');
-                helpElem.style.position = 'absolute';
-                helpElem.style.display = 'block';
-                helpElem.style.paddingLeft = 20 * turtleBlocksScale + 'px';
-                helpElem.style.paddingRight = 20 * turtleBlocksScale + 'px';
-                helpElem.style.paddingTop = '0px';
-                helpElem.style.paddingBottom = 20 * turtleBlocksScale + 'px';
-                helpElem.style.fontSize = 20 + 'px'; //  * turtleBlocksScale + 'px';
-                helpElem.style.color = '#000000';  // '#ffffff';
-                helpElem.style.left = 65 * turtleBlocksScale + 'px';
-                helpElem.style.top = 105 * turtleBlocksScale + 'px';
-                var w = Math.min(300, 300); //  * turtleBlocksScale);
-                var h = Math.min(300, 300); //  * turtleBlocksScale);
-                helpElem.style.width = w + 'px';
-                helpElem.style.height = h + 'px';
-
-                if (turtleBlocksScale > 1) {
-                    var bitmap = helpContainer.children[0];
-                    if (bitmap != undefined) {
-                        // bitmap.scaleX = bitmap.scaleY = bitmap.scale = turtleBlocksScale;
-                    }
-                }
-            }
-
-            doneTour = storage.doneTour === 'true';
-
-            if (firstTime && doneTour) {
-                docById('helpElem').style.visibility = 'hidden';
-                helpContainer.visible = false;
-            } else {
-                if (sugarizerCompatibility.isInsideSugarizer()) {
-                    sugarizerCompatibility.data.doneTour = 'true';
-                } else {
-                    storage.doneTour = 'true';
-                }
-
-                var imageScale = 55 * turtleBlocksScale;
-                __setHelpHTML(helpIdx, imageScale);
-                docById('helpElem').style.visibility = 'visible';
-                helpContainer.visible = true;
-                update = true;
-
-                // Make sure the palettes and the secondary menus are
-                // visible while help is shown.
-                palettes.show();
-                if (!menuButtonsVisible) {
-                    doMenuAnimation(1);
-                }
-            }
-        };
-
-        function _doMenuButton() {
-            _doMenuAnimation(1);
-        };
-
-        function _doMenuAnimation() {
-            var bitmap = last(menuContainer.children);
-            if (bitmap != null) {
-                var r = bitmap.rotation;
-                if (r % 90 !== 0) {
-                    return;
-                }
-
-                createjs.Tween.get(bitmap)
-                    .to({
-                        rotation: r
-                    })
-                    .to({
-                        rotation: r + 90
-                    }, 500);
-            } else {
-                // Race conditions during load
-                setTimeout(_doMenuAnimation, 50);
-            }
-
-            setTimeout(function () {
-                if (menuButtonsVisible) {
-                    menuButtonsVisible = false;
-                    for (var button in onscreenMenu) {
-                        onscreenMenu[button].visible = false;
-                    }
-                } else {
-                    menuButtonsVisible = true;
-                    for (var button in onscreenMenu) {
-                        onscreenMenu[button].visible = true;
-                    }
-                }
-                update = true;
-            }, 500);
-        };
-
-        function _toggleToolbar() {
-            buttonsVisible = !buttonsVisible;
-            menuContainer.visible = buttonsVisible;
-            headerContainer.visible = buttonsVisible;
-            for (var button in onscreenButtons) {
-                onscreenButtons[button].visible = buttonsVisible;
-            }
-
-            for (var button in onscreenMenu) {
-                onscreenMenu[button].visible = buttonsVisible;
-            }
-
-            update = true;
-        };
-
-        function _makeButton(name, label, x, y, size, rotation, parent) {
-            var container = new createjs.Container();
-
-            if (parent == undefined) {
-                stage.addChild(container);
-            } else {
-                parent.addChild(container);
-            }
-
-            container.x = x;
-            container.y = y;
-
-            var text = new createjs.Text(label, '14px Sans', '#282828');
-            if (container.y < 55) {
-                if (container.x < 55) {
-                    text.textAlign = 'left';
-                    text.x = -14;
-                } else {
-                    text.textAlign = 'center';
-                    text.x = 0;
-                }
-                text.y = 30;
-            } else {
-                text.textAlign = 'right';
-                text.x = -28;
-                text.y = 0;
-            }
-
-            text.visible = false;
-
-            var circles;
-            container.on('mouseover', function (event) {
-                for (var c = 0; c < container.children.length; c++) {
-                    if (container.children[c].text != undefined) {
-                        container.children[c].visible = true;
-                        stage.update();
-                        break;
-                    }
-                }
-
-                var r = size / 2;
-                circles = showButtonHighlight(container.x, container.y, r, event, palettes.scale, stage);
-            });
-
-            container.on('mouseout', function (event) {
-                hideButtonHighlight(circles, stage);
-                for (var c = 0; c < container.children.length; c++) {
-                    if (container.children[c].text != undefined) {
-                        container.children[c].visible = false;
-                        stage.update();
-                        break;
-                    }
-                }
-            });
-
-            var img = new Image();
-
-            img.onload = function () {
-                var originalSize = 55; // this is the original svg size
-                var halfSize = Math.floor(size / 2);
-
-                var bitmap = new createjs.Bitmap(img);
-                if (size !== originalSize) {
-                    bitmap.scaleX = size / originalSize;
-                    bitmap.scaleY = size / originalSize;
-                }
-
-                bitmap.regX = halfSize / bitmap.scaleX;
-                bitmap.regY = halfSize / bitmap.scaleY;
-                if (rotation !== undefined) {
-                    bitmap.rotation = rotation;
-                }
-
-                container.addChild(bitmap);
-                var hitArea = new createjs.Shape();
-                hitArea.graphics.beginFill('#FFF').drawEllipse(-halfSize, -halfSize, size, size);
-                hitArea.x = 0;
-                hitArea.y = 0;
-                container.hitArea = hitArea;
-                bitmap.cache(0, 0, size, size);
-                bitmap.updateCache();
-                update = true;
-
-                if (name === 'Cartesian-button') {
-                    gridButtonLabel = text;
-                    gridImages = [bitmap];
-                }
-
-            };
-
-            img.src = 'header-icons/' + name + '.svg';
-            container.addChild(text);
-
-            return container;
-        };
-
-        function _loadButtonDragHandler(container, ox, oy, action, longAction, extraLongAction, longImg, extraLongImg) {
-            // Prevent multiple button presses (i.e., debounce).
-            var lockTimer = null;
-            var locked = false;
-
-            if (longAction === null) {
-                longAction = action;
-            }
-
-            if (extraLongAction === null) {
-                extraLongAction = longAction;
-            }
-
-            // Long and extra-long press variables declaration
-            var pressTimer = null;
-            var isLong = false;
-            var pressTimerExtra = null;
-            var isExtraLong = false;
-
-            var formerContainer = container;
-
-            container.on('mouseover', function (event) {
-                if (!loading) {
-                    document.body.style.cursor = 'pointer';
-                }
-            });
-
-            container.on('mouseout', function (event) {
-                if (!loading) {
-                    document.body.style.cursor = 'default';
-                }
-            });
-
-            container.on('mousedown', function (event) {
-                if (locked) {
-                    return;
-                } else {
-                    locked = true;
-
-                    lockTimer = setTimeout(function () {
-                        locked = false;
-
-                        clearTimeout(pressTimer);
-                        clearTimeout(pressTimerExtra);
-                        if (longImg !== null || extraLongImg !== null) {
-                            container.visible = false;
-                            container = formerContainer;
-                            container.visible = true;
-                        }
-                    }, 1500);
-                }
-
-                var mousedown = true;
-
-                var offset = {
-                    x: container.x - Math.round(event.stageX / turtleBlocksScale),
-                    y: container.y - Math.round(event.stageY / turtleBlocksScale)
-                };
-
-                pressTimer = setTimeout(function () {
-                    isLong = true;
-                    if (longImg !== null) {
-                        container.visible = false;
-                        container = _makeButton(longImg, '', ox, oy, cellSize, 0);
-                    }
-                }, 500);
-
-                pressTimerExtra = setTimeout(function () {
-                    isExtraLong = true;
-                    if (extraLongImg !== null) {
-                        container.visible = false;
-                        container = _makeButton(extraLongImg, '', ox, oy, cellSize, 0);
-                    }
-                }, 1000);
-
-                var circles = showButtonHighlight(ox, oy, cellSize / 2, event, turtleBlocksScale, stage);
-
-                function __pressupFunction (event) {
-                    clearTimeout(lockTimer);
-
-                    hideButtonHighlight(circles, stage);
-                    container.x = ox;
-                    container.y = oy;
-
-                    if (longImg !== null || extraLongImg !== null) {
-                        container.visible = false;
-                        container = formerContainer;
-                        container.visible = true;
-                    }
-
-                    locked = false;
-
-                    if (action != null && mousedown && !locked) {
-                        clearTimeout(pressTimer);
-                        clearTimeout(pressTimerExtra);
-
-                        if (!isLong) {
-                            action();
-                        } else if (!isExtraLong) {
-                            longAction();
-                        } else {
-                            extraLongAction();
-                        }
-                    }
-
-                    mousedown = false;
-                };
-
-                // Remove the previous listener, if any, so we don't
-                // get multiple listeners added to the event.
-                container.removeAllEventListeners('pressup');
-                var closure = container.on('pressup', __pressupFunction);
-
-                isLong = false;
-                isExtraLong = false;
-            });
-        };
-
-        function pasted() {
-            var pasteinput = docById('paste').value;
-            var rawData = pasteinput;
-            if (rawData == null || rawData == '') {
-                return;
-            }
-
-            var cleanData = rawData.replace('\n', ' ');
-            try {
-                var obj = JSON.parse(cleanData);
-            } catch (e) {
-                errorMsg(_('Could not parse JSON input.'));
-                return;
-            }
-
-            for (var name in blocks.palettes.dict) {
-                blocks.palettes.dict[name].hideMenu(true);
-            }
-
-            refreshCanvas();
-
-            blocks.loadNewBlocks(obj);
-            pasteBox.hide();
-       };
-
+        document.addEventListener('mousewheel', scrollEvent, false);
+        document.addEventListener('DOMMouseScroll', scrollEvent, false);
+
+        document.onkeydown = __keyPressed;
+        _hideStopButton();
     };
+};
+
+activity = new Activity();
+
+require(['domReady!', 'activity/sugarizer-compatibility'], function (doc) {
+    if (sugarizerCompatibility.isInsideSugarizer()) {
+        window.addEventListener('localized', function () {
+            sugarizerCompatibility.loadData(function () {
+                planet = document.getElementById('planet-iframe');
+                planet.onload = function () {
+                    activity.domReady(doc);
+                };
+            });
+        });
+
+        document.webL10n.setLanguage(sugarizerCompatibility.getLanguage());
+    } else {
+        activity.setupDependencies();
+        activity.domReady(doc);
+    }
+});
+
+define(MYDEFINES, function (compatibility) {
+    activity.setupDependencies();
+    activity.doContextMenus();
+    activity.doPluginsAndPaletteCols();
 });
